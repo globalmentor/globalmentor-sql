@@ -62,6 +62,18 @@ public class SQLUtilities
 		statement.executeUpdate(statementStringBuffer.toString());	//execute the SQL drop statement
 	}
 
+	/**Adds a column to a table using SQL commands.
+	@param statement The SQL statement.
+	@param tableName The name of the table to which a column should be added.
+	@param columnName The name of the column to add.
+	@param columnDefinition The definition string of the column.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	public static void alterTableAddColumn(final Statement statement, final String tableName, final String columnName, final String columnDefinition) throws SQLException
+	{
+		statement.executeUpdate(ALTER+' '+TABLE+' '+tableName+' '+ADD+' '+columnName+' '+columnDefinition);	//execute the SQL alter table statement
+	}
+
 	/**Inserts values into a table using SQL commands.
 	@param statement The SQL statement.
 	@param name The name of the table into which data will be inserted.

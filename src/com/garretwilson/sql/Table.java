@@ -2,6 +2,7 @@ package com.garretwilson.sql;
 
 import java.sql.*;
 import java.util.*;
+import static java.util.Collections.*;
 
 import javax.sql.*;
 
@@ -97,16 +98,20 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 	{
 		final StringBuilder stringBuilder=new StringBuilder();	//we'll accumulate the SQL definition here
 		final Column[] columns=getColumns();	//get the column definitions
-		final Column[] primaryKeys=getPrimaryKeys();	//get the primary keys
+//TODO del when works		final Column[] primaryKeys=getPrimaryKeys();	//get the primary keys
 		for(int i=0; i<columns.length; ++i)	//look at each column definition
 		{
-			final Column column=columns[i];	//look the current column
+			final Column column=columns[i];	//look the current column			
+			stringBuilder.append(column.getName()).append(SPACE_CHAR).append(getColumnSQLDefinition(column));	//add the column name and definition
+/*TODO del when works
 				//append the column name and type
 			stringBuilder.append(column.getName()).append(SPACE_CHAR).append(column.getType());
 			if(primaryKeys.length==1 && column.isPrimaryKey())	//if this columns is the only primary key
 			{
 				stringBuilder.append(SPACE_CHAR).append(PRIMARY_KEY);	//append the primary key designation
 			}
+*/
+			stringBuilder.append(getColumnSQLDefinition(column));	//add the definition for this column
 			if(i<columns.length-1 || primaryKeys.length>1)	//if this isn't the last column, or there are primary keys to list
 			{
 				stringBuilder.append(LIST_SEPARATOR).append(SPACE_CHAR);	//append a list separator and a space
@@ -119,7 +124,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 			{
 				final Column primaryKey=primaryKeys[i];	//look the current primary key
 				stringBuilder.append(primaryKey.getName());	//append the primary key
-				if(i<primaryKeys.length-1)	//if this isn't the last primray key
+				if(i<primaryKeys.length-1)	//if this isn't the last primary key
 				{
 					stringBuilder.append(LIST_SEPARATOR).append(SPACE_CHAR);	//append a list separator and a space
 				}
@@ -128,7 +133,103 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 		}
 		return stringBuilder.toString();	//return the SQL definition string we constructed
 	}
+
+	/**Determines the SQL definition for a particular column, not including the column name.
+	@param column	The column for which a definition should be created
+	@return An SQL definition of the column, not including the column name.
+	*/ 
+	protected String getColumnSQLDefinition(final Column column)
+	{
+		final StringBuilder stringBuilder=new StringBuilder();	//create a new string builder for constructing the definition
+		stringBuilder.append(column.getType());	//append the column type
+		if(getPrimaryKeys().length==1 && column.isPrimaryKey())	//if this column is the only primary key
+		{
+			stringBuilder.append(SPACE_CHAR).append(PRIMARY_KEY);	//append the primary key designation
+		}
+		return stringBuilder.toString();	//return the column SQL definition
+	}
 	
+	/**Synchronizes the underlying table with this object's table definition by creating the table if needed
+	 	and then adding or removing underlying table columns as needed.
+	@exception SQLException Thrown if there is an error accessing the database.
+	*/
+	public void synchronize() throws SQLException
+	{
+		if(exists())	//if the table exists
+		{
+			final Column[] columns=getColumns();	//get our columns
+			final Map<String, Column> columnMap=new HashMap<String, Column>(columns.length);	//create a map to hold our column definitions, keyed by name
+			for(final Column column:columns)	//for each column
+			{
+				columnMap.put(column.getName(), column);	//add this column to the map
+			}
+/*TODO del			
+			final Set<Column> existingColumnSet=new HashSet<Column>(columns.length);	//create a set to hold our columns to check for existence
+			addAll(existingColumnSet, columns);	//add all the columns to our set
+			final Set<Column> columnSet=unmodifiableSet(new HashSet<Column>(existingColumnSet));	//create a separate set to hold our canonical list of columns			
+*/
+			final List<ColumnMetaData> columnMetaDataList=getColumnMetadata();	//get metadata describing the underlying table columns
+			for(final ColumnMetaData columnMetaData:columnMetaDataList)	//look at the metadata for each column
+			{
+Debug.trace("looking at column metadata", columnMetaData);	//TODO del
+				final String name=columnMetaData.getName();	//get the name of the column
+				final Column column=columnMap.get(name);	//see if we have a definition with this name
+				if(column!=null)	//if we know about this column
+				{
+Debug.trace("we know about this column", columnMetaData);
+					//TODO make sure the definition is the same
+					columnMap.remove(name);	//remove the column definition; we've already checked it
+				}
+				else	//if we don't know about this column
+				{
+					//TODO delete the column from the underlying table
+				}
+			}
+			for(final Column column:columnMap.values())	//look at the remaining columns TODO important check the order; the mapped order could be anything
+			{
+Debug.trace("we need to add column", column);
+				addColumn(column);	//add this column
+			}
+		}
+		else	//if the table does not exist
+		{
+			create(false);	//create the table; we shouldn't need to drop it first, as it doesn't exist
+		}
+	}
+
+	/**Retrieves metadata describing the underlying table columns.
+	@exception SQLException Thrown if there is an error accessing the database.
+	*/
+	public List<ColumnMetaData> getColumnMetadata() throws SQLException
+	{
+		final Connection connection=getDataSource().getConnection();	//get a connection to the database
+		try
+		{
+			final DatabaseMetaData metadata=connection.getMetaData();	//get database metadata
+			final ResultSet resultSet=metadata.getColumns(null, null, getName(), "%");	//get all columns for this table TODO use a constant for the JDBC wildcard
+			try
+			{
+				final List<ColumnMetaData> columnMetaDataList=new ArrayList<ColumnMetaData>();	//create a new list to hold the column metadata
+				while(resultSet.next())	//while ther are more columns
+				{
+					final String name=resultSet.getString(ColumnMetaData.Columns.COLUMN_NAME.toString());	//get the column name
+						//TODO get other column metadata
+					final ColumnMetaData columnMetaData=new ColumnMetaData(name);	//create column metadata
+					columnMetaDataList.add(columnMetaData);	//add the metadata to our list
+				}
+				return columnMetaDataList;	//return the list of column metadata
+			}
+			finally
+			{
+				resultSet.close();	//always close the result set 
+			}
+		}
+		finally
+		{
+			connection.close();	//always close the connection
+		}
+	}
+
 	/**Creates the table after first deleting it if it already exists.
 	@exception SQLException Thrown if there is an error accessing the database.
 	*/
@@ -257,6 +358,30 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 			{
 				SQLUtilities.dropTable(statement, getName(), ifExists);	//remove the table if it exists
 				invalidateCachedRecordCount();	//any cached record count is no longer valid
+			}
+			finally
+			{
+				statement.close();	//always close the statement
+			}
+		}
+		finally
+		{
+			connection.close();	//always close the connection
+		}
+	}
+
+	/**Adds a column to the table.
+	@exception SQLException Thrown if there is an error accessing the database.
+	*/
+	protected void addColumn(final Column column) throws SQLException
+	{
+		final Connection connection=getDataSource().getConnection();	//get a connection to the database
+		try
+		{
+			final Statement statement=connection.createStatement(); //create a statement
+			try
+			{
+				SQLUtilities.alterTableAddColumn(statement, getName(), column.getName(), getColumnSQLDefinition(column));	//add the column to the table
 			}
 			finally
 			{
