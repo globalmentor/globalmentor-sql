@@ -1,17 +1,18 @@
 package com.garretwilson.sql;
 
-import java.util.*;
 import java.sql.*;
 import javax.sql.*;
 import com.garretwilson.util.*;
 
 /**Facade pattern for accessing a table through SQL and JDBC.
-	<p>Classes that extend this class should implement the following methods:</p>
-	<ul>
-	  <li><code>public void insert(<em>ObjectType</em>)</code></li>
-		<li><code>protected Object retrieve(ResultSet)</code></li>
-	  <li><code>public void update(final String primaryKeyValue, <em>ObjectType</em>)</code></li>
-	</ul>
+<p>Classes that extend this class should implement the following methods:</p>
+<ul>
+  <li><code>public void insert(<em>ObjectType</em>)</code></li>
+	<li><code>protected Object retrieve(ResultSet)</code></li>
+  <li><code>public void update(final String primaryKeyValue, <em>ObjectType</em>)</code></li>
+</ul>
+<p>This class has the capability of caching database record count, but defaults
+	to a cache that is always expired.</p>
 @author Garret Wilson
 */
 public abstract class Table implements SQLConstants
@@ -48,6 +49,8 @@ public abstract class Table implements SQLConstants
 
 		/**@return The name of the default ordering column(s).*/
 		public String getDefaultOrderBy() {return defaultOrderBy;}
+
+
 
 	/**Default order constructor.
 	@param dataSource The connection factory.
@@ -100,9 +103,10 @@ public abstract class Table implements SQLConstants
 			{
 				if(drop)  //if we should first drop the table
 				{
-				  SQLUtilities.dropTable(statement, getName(), true);	//remove the table if it exists
+					drop(true);	//remove the table if it exists
 				}
 				SQLUtilities.createTable(statement, getName(), getDefinition());	//create the table
+				invalidateCachedRecordCount();	//any cached record count is no longer valid
 			}
 			finally
 			{
@@ -129,6 +133,7 @@ public abstract class Table implements SQLConstants
 			try
 			{
 				SQLUtilities.delete(statement, getName(), expression);	//delete the records
+				invalidateCachedRecordCount();	//any cached record count is no longer valid
 			}
 			finally
 			{
@@ -183,6 +188,7 @@ public abstract class Table implements SQLConstants
 			try
 			{
 				SQLUtilities.dropTable(statement, getName(), ifExists);	//remove the table if it exists
+				invalidateCachedRecordCount();	//any cached record count is no longer valid
 			}
 			finally
 			{
@@ -200,36 +206,47 @@ public abstract class Table implements SQLConstants
 	*/
 	public int getRecordCount() throws SQLException
 	{
-		final Connection connection=getDataSource().getConnection();	//get a connection to the database
-		try
+			//if we have a valid cached record count, and it hasn't expired, yet 
+		if(getCachedRecordCount()>=0 && getLastCacheTime()>System.currentTimeMillis()-getCachedRecordCountLifetime())
 		{
-				//create a statement that can quickly scroll to the end
-			final Statement statement=connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			return getCachedRecordCount();	//return the cached record count
+		}
+		else	//if our cached record count is expired or invalid
+		{
+			final Connection connection=getDataSource().getConnection();	//get a connection to the database
 			try
 			{
-					//create a statement for selecting all the records: "SELECT * FROM table"
-				final StringBuffer statementStringBuffer=new StringBuffer();  //create a string buffer in which to construct the statement
-				statementStringBuffer.append(SELECT).append(' ').append(WILDCARD_CHAR); //append "SELECT *"
-				statementStringBuffer.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
-				final ResultSet resultSet=statement.executeQuery(statementStringBuffer.toString()); //select all the records
+					//create a statement that can quickly scroll to the end
+				final Statement statement=connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 				try
 				{
-					resultSet.last();  //move to after the last row G***make this a comvenience method that knows how to iterate the table of ResultSet.last() isn't supported
-					return resultSet.getRow();  //return the row number, which will be the number of rows in the table
+						//create a statement for selecting all the records: "SELECT * FROM table"
+					final StringBuffer statementStringBuffer=new StringBuffer();  //create a string buffer in which to construct the statement
+					statementStringBuffer.append(SELECT).append(' ').append(WILDCARD_CHAR); //append "SELECT *"
+					statementStringBuffer.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
+					final ResultSet resultSet=statement.executeQuery(statementStringBuffer.toString()); //select all the records
+					try
+					{
+						resultSet.last();  //move to after the last row G***make this a comvenience method that knows how to iterate the table of ResultSet.last() isn't supported
+						final int recordCount=resultSet.getRow();  //get the row number, which will be the number of rows in the table
+						setCachedRecordCount(recordCount);	//update the cached record count
+						return recordCount;	//return the record count
+
+					}
+					finally
+					{
+						resultSet.close();	//always close the result set
+					}
 				}
 				finally
 				{
-					resultSet.close();	//always close the result set
+					statement.close();	//always close the statement
 				}
 			}
 			finally
 			{
-				statement.close();	//always close the statement
+				connection.close();	//always close the connection
 			}
-		}
-		finally
-		{
-			connection.close();	//always close the connection
 		}
 	}
 
@@ -246,6 +263,7 @@ public abstract class Table implements SQLConstants
 			try
 			{
 				SQLUtilities.insertValues(statement, getName(), values);	//insert the values into the table
+				invalidateCachedRecordCount();	//any cached record count is no longer valid
 			}
 			finally
 			{
@@ -329,7 +347,7 @@ public abstract class Table implements SQLConstants
 				final StringBuffer statementStringBuffer=new StringBuffer();  //create a string buffer in which to construct the statement
 				statementStringBuffer.append(SELECT).append(' ').append(WILDCARD_CHAR); //append "SELECT *"
 				statementStringBuffer.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
-				if(expression!=null)  //if a valid expression was given
+				if(expression!=null && expression.length()>0)  //if a valid expression was given
 				  statementStringBuffer.append(' ').append(WHERE).append(' ').append(expression); //append " WHERE expression"
 				if(orderBy==null) //if no ordering was given
 				{
@@ -498,5 +516,55 @@ public abstract class Table implements SQLConstants
 			connection.close();	//always close the connection
 		}
 	}
+
+	/**The number of milliseconds it takes before the cached record count will expire.*/
+	private long cachedRecordCountLifetime=0;
+
+		/**@return The number of milliseconds it takes before the cached record count will expire.*/
+		public long getCachedRecordCountLifetime() {return cachedRecordCountLifetime;}
+
+		/**Sets the number of milliseconds it takes before the cached record count will expire.
+		@param lifetime The record count expiration, in milliseconds.
+		*/
+		public void setCachedRecordCountExpiration(final long lifetime)
+		{
+			cachedRecordCountLifetime=lifetime;	//update the record count lifetime
+		}
+
+	/**The cached record count, or -1 if invalid.*/
+	private int cachedRecordCount=-1;
+
+		/**@return The cached record count, or -1 if valid.*/
+		protected int getCachedRecordCount() {return cachedRecordCount;}
+
+		/**Sets the cached record count and updates the last cache time.
+		@param recordCount The cached record count, or -1 if the cache should be
+			invalidated.
+		@see #setLastCacheTime
+		*/
+		private void setCachedRecordCount(final int recordCount)
+		{
+			cachedRecordCount=recordCount;	//update the cached record count
+			setLastCacheTime(System.currentTimeMillis());  //show when we just updated the cache
+		}
+
+		/**Invalidates the cached record count, if any.
+		@see #setCachedRecordCount
+		*/
+		public void invalidateCachedRecordCount()
+		{
+			setCachedRecordCount(-1);	//show that we don't have a valid cached record count
+		}
+
+	/**The last time the cache was updated, in milliseconds.*/
+	private long lastCacheTime=0;
+
+		/**@return The last time the cache was updated, in milliseconds.*/
+		protected long getLastCacheTime() {return lastCacheTime;}
+
+		/**Sets The last time the cache was updated.
+		@param cacheTime The last time the cache was updated, in milliseconds.
+		*/
+		private void setLastCacheTime(final long cacheTime) {lastCacheTime=cacheTime;}
 
 }
