@@ -78,10 +78,6 @@ public abstract class Table implements SQLConstants
 		this.defaultOrderBy=defaultOrderBy; //save the default ordering
 	}
 
-	/**@return A text definition suitable for an SQL CREATE TABLE XXX (definition)
-		statement.*/
-//G***del	public String getSQLTableDefinition();
-
 	/**Creates the table after first deleting it if it already exists.
 	@exception SQLException Thrown if there is an error accessing the database.
 	*/
