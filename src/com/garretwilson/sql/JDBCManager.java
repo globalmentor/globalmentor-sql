@@ -104,7 +104,7 @@ public class JDBCManager implements JDBCConstants
 		}
 		else  //if a directory was not given
 		{
-			databaseDirectory=new File(System.getProperty(SystemConstants.USER_HOME));  //use the home directory
+			databaseDirectory=new File(System.getProperty(SystemConstants.USER_HOME_PROPERTY));  //use the home directory
 		}
 	}
 
