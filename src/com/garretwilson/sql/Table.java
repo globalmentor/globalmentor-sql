@@ -309,7 +309,7 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 	@return A new object with information from the current row in the result set.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	protected abstract T retrieve(final ResultSet resultSet) throws SQLException;
+	public abstract T retrieve(final ResultSet resultSet) throws SQLException;
 
 	/**Determines if a table exists in the database.
 	@return <code>true</code> if the table exists, else <code>false</code>.
@@ -558,7 +558,7 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 	@param object The new information for the record.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	protected abstract void update(final String primaryKeyValue, final T object) throws SQLException;
+	public abstract void update(final String primaryKeyValue, final T object) throws SQLException;
 
 	/**Inserts values into the table.
 	@param primaryKeyValue The value of the primary key for which record to update.
