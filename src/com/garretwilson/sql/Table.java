@@ -559,6 +559,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 				{
 				  statementStringBuffer.append(' ').append(ORDER_BY).append(' ').append(createList(orderBy)); //append " ORDER BY orderBy"
 				}
+//G***del Debug.setDebug(true);
 //G***del Debug.trace("ready to execute SQL statement: ", statementStringBuffer);	//G***del
 				final ResultSet resultSet=statement.executeQuery(statementStringBuffer.toString()); //select the records
 				try
@@ -568,34 +569,18 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 					final int startRow=startIndex+1; //we'll start at the requested row
 					final int endRow=count<Integer.MAX_VALUE ? startRow+count : Integer.MAX_VALUE; //we'll end when we get past the requested count (allowing for a requested maximum amount)
 				  int row=startRow; //we'll start at the starting row
-					resultSet.absolute(startRow); //go to the starting row
-					if(!resultSet.isBeforeFirst() && !resultSet.isAfterLast())  //if there are rows, and we haven't gone past all the rows
+					boolean onResultSet=resultSet.absolute(startRow); //go to the starting row
+//G***del when works					if(!resultSet.isBeforeFirst() && !resultSet.isAfterLast())  //if there are rows, and we haven't gone past all the rows
+					while(onResultSet && row<endRow)  //while we're still on the result set and w're not past the ending row
 					{
-						while(row<endRow) //while we're not past the ending row
-						{
-							list.add(factory.retrieve(resultSet)); //retrieve the object from the row and add it to our list
-							if(resultSet.next())  //if there is another row
-							{
-								++row;  //show that we just went to the next row
-							}
-							else  //if there are no more rows
-							{
-								break;  //stop retrieving rows
-							}
-						}
+						list.add(factory.retrieve(resultSet)); //retrieve the object from the row and add it to our list
+						onResultSet=resultSet.next();	//go to the next row
+						++row;  //show that we just went to the next row
 					}
 					resultSet.last();  //move to the last row
 					final int superListSize=resultSet.getRow();  //get the row number, which will be the number of rows in the table
 				  list.setSuperListSize(superListSize);  //show how many rows we found
 				  return list;	//return the list of objects representing the records we found
-/*G***del
-
-					while(resultSet.next())	//while we have items left in our result set
-					{
-						++rowCount;  //show that we're going to the next row
-						list.add(retrieve(resultSet)); //retrieve the object from the row and add it to our list
-					}
-*/
 				}
 				finally
 				{
@@ -611,6 +596,21 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 		{
 			connection.close();	//always close the connection
 		}
+	}
+
+	/**Selects all columns from records from the table using the given criteria.
+	@param factory The object factory used to create objects from the result set.
+	@param join The SQL join representation,
+		or <code>null</code> if no tables are being joined.
+	@param where The SQL records selection, or
+		<code>null</code> if all records should be returned.
+	@param orderBy The columns on which to sort, if any.
+	@return A list of objects representing matched records.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final Join join, final Where where, final Column... orderBy) throws SQLException
+	{
+		return select(factory, WILDCARD_STRING, join, where, orderBy);
 	}
 
 	/**Selects records from the table using the given criteria.
