@@ -1,13 +1,17 @@
 package com.garretwilson.sql;
 
 import java.sql.*;
+
 import com.garretwilson.lang.StringUtilities;
+import com.garretwilson.util.NameValuePair;
+
+import static com.garretwilson.sql.SQLConstants.*;
 
 /**Class that knows how to manipulate SQL statements.
 @author Garret Wilson
 @see SQLConstants
 */
-public class SQLUtilities implements SQLConstants
+public class SQLUtilities
 {
 
 	/**Creates a table using SQL commands.
@@ -72,15 +76,15 @@ public class SQLUtilities implements SQLConstants
 	/**Inserts values into a table using SQL commands.
 	@param statement The SQL statement.
 	@param name The name of the table into which data will be inserted.
-	@param valueArray The array of values to go inside SQL INSERT INTO XXX VALUES (values).
+	@param values The values to go inside SQL INSERT INTO XXX VALUES (values).
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public static void insertValues(final Statement statement, final String name, final Object[] valueArray) throws SQLException  //G***fix to work with integer values
+	public static void insertValues(final Statement statement, final String name, final Object... values) throws SQLException  //G***fix to work with integer values
 	{
 		final StringBuffer valueStringBuffer=new StringBuffer();  //we'll store the values in this string
-		for(int i=0; i<valueArray.length; ++i)	//look at each of the values
+		for(int i=0; i<values.length; ++i)	//look at each of the values
 		{
-			final Object value=valueArray[i]; //get this value
+			final Object value=values[i]; //get this value
 			if(value!=null) //if we have a valid value
 			{
 				valueStringBuffer.append(SINGLE_QUOTE);
@@ -91,7 +95,7 @@ public class SQLUtilities implements SQLConstants
 			{
 			  valueStringBuffer.append(NULL); //add an SQL NULL value
 			}
-			if(i<valueArray.length-1) //if we have more values to go
+			if(i<values.length-1) //if we have more values to go
 			{
 				valueStringBuffer.append(LIST_SEPARATOR).append(' ');  //separate the values
 			}
@@ -134,7 +138,7 @@ public class SQLUtilities implements SQLConstants
 	@param namesValues The array of name/value pair arrays to update.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public static void updateTable(final Statement statement, final String name, final String[][] namesValues) throws SQLException
+	public static void updateTable(final Statement statement, final String name, final NameValuePair<String, String>[] namesValues) throws SQLException
 	{
 		updateTable(statement, name, namesValues, null); //update the table with no predicate
 	}
@@ -142,20 +146,20 @@ public class SQLUtilities implements SQLConstants
 	/**Updates values in a table using SQL commands.
 	@param statement The SQL statement.
 	@param name The name of the table to update.
-	@param namesValues The array of name/value pair arrays to update.
+	@param namesValues The array of column/value pair arrays to update.
 	@param predicate The condition on which to make the changes, or
 		<code>null</code> if all rows should be updated.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public static void updateTable(final Statement statement, final String name, final Object[][] namesValues, final String predicate) throws SQLException
+	public static void updateTable(final Statement statement, final String name, final NameValuePair<String, String>[] namesValues, final String predicate) throws SQLException
 	{
 		final StringBuffer valueStringBuffer=new StringBuffer(); //we'll construct the value string from the names and values
 		for(int i=0; i<namesValues.length; ++i) //look at each of the name/value pair arrays
 		{
-			valueStringBuffer.append(namesValues[i][0].toString());  //append the name
+			valueStringBuffer.append(namesValues[i].getName());  //append the name
 			valueStringBuffer.append(EQUALS); //append '='
 			valueStringBuffer.append(SINGLE_QUOTE);
-			valueStringBuffer.append(createSQLValue(namesValues[i][1].toString())); //append the value
+			valueStringBuffer.append(createSQLValue(namesValues[i].getValue())); //append the value
 			valueStringBuffer.append(SINGLE_QUOTE);
 			if(i<namesValues.length-1) //if we have more names and values to go
 			{
@@ -182,4 +186,46 @@ public class SQLUtilities implements SQLConstants
 		return StringUtilities.replace(value, SINGLE_QUOTE, ESCAPED_SINGLE_QUOTE);  //replace all single quotes with double single quotes
 	}
 
+	/**Creates an expression matching names and values, combined by the
+		given conjunction. (e.g. "COL1="val1" AND COL2="val2")
+	@param conjunction The conjunction to use when combining the columns in the
+		expression.
+	@param columns The names and values of the columns to match.
+	@return The string form of the resulting expression.
+	*/
+	public static String createExpression(final Conjunction conjunction, NameValuePair<String, String>... columns)	//TODO replace conjunction with enum
+	{
+		final StringBuilder expression=new StringBuilder();
+		for(int i=0; i<columns.length; ++i)	//look at each column matching information
+		{
+			final NameValuePair<String, String> column=columns[i];	//get this column
+			expression.append(column.getName());	//name
+			expression.append(EQUALS);	//EQUALS
+			expression.append(SINGLE_QUOTE);	//'
+			expression.append(createSQLValue(column.getValue()));	//value
+			expression.append(SINGLE_QUOTE);	//'
+			if(i<columns.length-1)	//if this is not the last column to match
+			{
+				expression.append(' ').append(conjunction).append(' ');	// conjunction 
+			}			
+		}
+		return expression.toString();  //return the string form of the expression we built 
+	}
+
+	/**Creates a string representing an SQL list.
+	@param items The items contained in the list, such as column names.
+	*/
+	public static String createList(final String... items)
+	{
+		final StringBuilder list=new StringBuilder();
+		for(int i=0; i<items.length; ++i)	//look at each item
+		{
+			list.append(items[i]);	//item
+			if(i<items.length-1)	//if this is not the last item in the list
+			{
+				list.append(LIST_SEPARATOR).append(' ');	// ,
+			}			
+		}
+		return list.toString();  //return the string form of the list we built
+	}
 }

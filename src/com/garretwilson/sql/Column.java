@@ -5,7 +5,7 @@ import com.garretwilson.util.NameValuePair;
 /**A class encapsulating the definition of a database column.
 @author Garret Wilson
 */
-public class ColumnDefinition extends NameValuePair<String, String>
+public class Column extends NameValuePair<String, String>
 {
 	/**@return The type of the column.
 	@see NameValuePair#getValue()
@@ -22,7 +22,7 @@ public class ColumnDefinition extends NameValuePair<String, String>
 	@param name The name of the column.
 	@param type The type of the column.
 	*/
-	public ColumnDefinition(final String name, final String type)
+	public Column(final String name, final String type)
 	{
 		this(name, type, false);	//construct a column that is not a primary key
 	}
@@ -32,7 +32,7 @@ public class ColumnDefinition extends NameValuePair<String, String>
 	@param type The type of the column.
 	@param primaryKey <code>true</code> if this column is a primary key.
 	*/
-	public ColumnDefinition(final String name, final String type, final boolean primaryKey)
+	public Column(final String name, final String type, final boolean primaryKey)
 	{
 		super(name, type);	//construct the base class with the name and the type as the value
 		this.primaryKey=primaryKey;	//save the primary key indication

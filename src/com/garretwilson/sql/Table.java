@@ -1,23 +1,27 @@
 package com.garretwilson.sql;
 
 import java.sql.*;
+import java.util.*;
+
 import javax.sql.*;
 
 import com.garretwilson.text.CharacterConstants;
 import com.garretwilson.util.*;
+
+import static com.garretwilson.sql.SQLConstants.*;
 
 /**Facade pattern for accessing a table through SQL and JDBC.
 <p>Classes that extend this class must implement the following methods:</p>
 <ul>
   <li><code>public void insert(<var>T</var>)</code></li>
 	<li><code>protected <var>T</var> retrieve(ResultSet)</code></li>
-  <li><code>public void update(final String primaryKeyValue, <var>T</var>)</code></li>
+  <li><code>public void update(<var>T</var>, final String... primaryKeyValue)</code></li>
 </ul>
 <p>This class has the capability of caching database record count, but defaults
 	to a cache that is always expired.</p>
 @author Garret Wilson
 */
-public abstract class Table<T> implements SQLConstants, CharacterConstants
+public abstract class Table<T> implements CharacterConstants
 {
 
 	/**The SQL wildcard ('*') character in string format.*/
@@ -35,49 +39,53 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 		/**@return The name of the table.*/
 		public String getName() {return name;}
 
-	/**The definition of the table.*/
-	private final ColumnDefinition[] definition;
+	/**The definition of the table columns.*/
+	private final Column[] columns;
 
-		/**@return The definition of the table.*/
-		protected ColumnDefinition[] getDefinition() {return definition;}
+		/**@return The definition of the table columns.*/
+		protected Column[] getColumns() {return columns;}
 
-	/**The name of the table primary key column.*/
-	private final String primaryKey;
+	/**The table primary key columns, if any.*/
+	private final Column[] primaryKeys;
 
-		/**@return The name of the table primary key column.*/
-		public String getPrimaryKey() {return primaryKey;}
+		/**@return The table primary key columns, if any.*/
+		public Column[] getPrimaryKeys() {return primaryKeys;}
 
-	/**The name of the default ordering column(s).*/
-	private final String defaultOrderBy;
+		/**Sets the primary key column.
+		@param primaryKey The primary key column.
+		*/
+//G***del		protected void setPrimaryKey(final Column primaryKey) {this.primaryKey=primaryKey;}
 
-		/**@return The name of the default ordering column(s).*/
-		public String getDefaultOrderBy() {return defaultOrderBy;}
+	/**The default ordering column(s).*/
+	private Column[] defaultOrderBy=new Column[]{};
 
-	/**Default order constructor.
-	@param dataSource The connection factory.
-	@param name The name of the table.
-	@param definition The definition of the table.
-	@param primaryKey The name of the primiary key column.
-	*/
-	public Table(final DataSource dataSource, final String name, final ColumnDefinition[] definition, final String primaryKey)
-	{
-		this(dataSource, name, definition, primaryKey, null); //construct the object with no default ordering
-	}
+		/**@return The default ordering column(s), empty if there is no default ordering.*/
+		public Column[] getDefaultOrderBy() {return defaultOrderBy;}
+
+		/**Sets the default ordering.
+		@param orderBy The default ordering column(s), if any.
+		*/
+		protected void setDefaultOrderBy(final Column... orderBy) {this.defaultOrderBy=orderBy;}
 
 	/**Constructor.
 	@param dataSource The connection factory.
 	@param name The name of the table.
 	@param definition The definition of the table.
-	@param primaryKey The name of the primiary key column.
-	@param defaultOrderBy The name of the default ordering column(s).
 	*/
-	public Table(final DataSource dataSource, final String name, final ColumnDefinition[] definition, final String primaryKey, final String defaultOrderBy)
+	public Table(final DataSource dataSource, final String name, final Column... columns)
 	{
 		this.dataSource=dataSource; //set the data source
 		this.name=name; //set the name
-		this.definition=definition; //set the definition
-		this.primaryKey=primaryKey; //save the primary key column name
-		this.defaultOrderBy=defaultOrderBy; //save the default ordering
+		this.columns=columns;	//save the columns
+		final List<Column> primaryKeyList=new ArrayList<Column>(columns.length);	//create a list for colecting primary keys
+		for(final Column column:columns)	//look at each columns
+		{
+			if(column.isPrimaryKey())	//if this columns is a primary key
+			{
+				primaryKeyList.add(column);	//add this column to our list of primary keys
+			}
+		}
+		primaryKeys=primaryKeyList.toArray(new Column[primaryKeyList.size()]);	//store the primary keys
 	}
 
 	/**@return A text definition suitable for an SQL CREATE TABLE <var>table</var>
@@ -87,8 +95,8 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 	protected String getSQLDefinition()
 	{
 		final StringBuilder stringBuilder=new StringBuilder();	//we'll accumulate the SQL definition here
-		final ColumnDefinition[] columns=getDefinition();	//get the column definitions
-		for(ColumnDefinition column:columns)	//look at each column definition
+		final Column[] columns=getColumns();	//get the column definitions
+		for(Column column:columns)	//look at each column definition
 		{
 				//append the column name and type
 			stringBuilder.append(column.getName()).append(SPACE_CHAR).append(column.getType());
@@ -140,6 +148,33 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 		}
 	}
 
+	/**Deletes records by primary key columns.
+	@param primaryKeyValues The value of the primary keys of the record to delete.
+	@exception IllegalArgumentException Thrown if no key values were provided.
+	@exception IllegalArgumentException Thrown if there are more values than
+		primary key columns.
+	@exception SQLException Thrown if there is an error processing the statement.
+	@see #getPrimaryKeys()
+	*/
+	public void deleteByPrimaryKey(final Object... primaryKeyValues) throws SQLException
+	{
+		if(primaryKeyValues.length==0)	//if no key values were provided
+		{
+			throw new IllegalArgumentException("No key values were provided");
+		}
+		delete(createColumnValues(getPrimaryKeys(), primaryKeyValues));  //delete the record based upon the primary keys
+	}
+
+	/**Deletes rows from the table for which the given columns contains
+		the specified values.
+	@param columnValues The columns and values to match.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	public void delete(final NameValuePair<Column, ?>... columnValues) throws SQLException
+	{
+		delete(SQLUtilities.createExpression(Conjunction.AND, createNamesValues(columnValues)));  //delete the records which have the correct value for this columm
+	}
+
 	/**Deletes one or more rows from the table that fit the given criteria.
 	@param expression The SQL expression that deletes the records, or
 		<code>null</code> if all records should be deleted.
@@ -173,19 +208,12 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 	@param columnValue The column value necessary for a record to be included.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
+/*G***del
 	public void deleteColumn(final String columnName, final String columnValue) throws SQLException
 	{
 		delete(columnName+EQUALS+SINGLE_QUOTE+columnValue+SINGLE_QUOTE);  //delete the records which have the correct value for this column
 	}
-
-	/**Deletes records by primary key column.
-	@param primaryKeyValue The value of the primary key of the record to delete.
-	@exception SQLException Thrown if there is an error processing the statement.
-	*/
-	public void deleteByPrimaryKey(final String primaryKeyValue) throws SQLException
-	{
-		deleteColumn(getPrimaryKey(), primaryKeyValue);  //delete the record based upon the primary key
-	}
+*/
 
 	/**Drops (deletes) the table if it exists.
 	@exception SQLException Thrown if there is an error accessing the database.
@@ -278,10 +306,10 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 	public abstract void insert(final T object) throws SQLException;
 
 	/**Inserts values into the table.
-	@param values The array of values to insert into the table.
+	@param values The values to insert into the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	protected void insert(final Object[] values) throws SQLException
+	protected void insert(final Object... values) throws SQLException
 	{
 		final Connection connection=getDataSource().getConnection();	//get a connection to the database
 		try
@@ -323,13 +351,24 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 		//TODO find a better way to check for table existence, such as looking at database metadata, if there is a standard JDBC way to do that
 		try	
 		{
-			select("TOP 1 *", null, 0, Integer.MAX_VALUE, null);  //select the first record from the database TODO use constants, and create a convenience routine for selectExpression methods
+			select("TOP 1 *", null, 0, Integer.MAX_VALUE);  //select the first record from the database TODO use constants, and create a convenience routine for selectExpression methods
 			return true;	//if we can select records from the table, the table exists
 		}
 		catch(SQLException sqlException)	//if there is any error
 		{
 			return false;	//assume the table doesn't exist
 		}
+	}
+
+	/**Selects all the records from the table for which the given columns contains
+		the specified values.
+	@param columnValues The column-value pairs to match.
+	@return A list of objects representing matched records.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	public SubList<T> select(final NameValuePair<Column, ?>... columnValues) throws SQLException
+	{
+		return select(SQLUtilities.createExpression(Conjunction.AND, createNamesValues(columnValues)));	//select the records which have the correct values for the column
 	}
 
 	/**Selects all the records from the table using the given criteria with the
@@ -353,20 +392,22 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
+/*G***del if not needed after varargs
 	public SubList<T> select(final String expression, final int startIndex, final int count) throws SQLException
 	{
-		return select(expression, startIndex, count, null); //select all the rows within the given range using the default ordering
+		return select(expression, startIndex, count); //select all the rows within the given range using the default ordering
 	}
+*/
 
 	/**Selects all the records from the table using the given criteria, sorting
 		on the given column.
 	@param expression The SQL expression that selects the records, or
 		<code>null</code> if all records should be returned.
-	@param orderBy The name of the column on which to sort.
+	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> select(final String expression, final String orderBy) throws SQLException
+	public SubList<T> select(final String expression, final Column... orderBy) throws SQLException
 	{
 		return select(expression, 0, Integer.MAX_VALUE, orderBy);  //return all the rows we can find, starting at the first
 	}
@@ -376,27 +417,26 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 		<code>null</code> if all records should be returned.
 	@param startIndex The index of the first row to retrieve.
 	@param count The maximum number of rows to return.
-	@param orderBy The name of the column on which to sort, or
-		<code>null</code> if the default ordering should be used.
+	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> select(final String whereExpression, final int startIndex, final int count, String orderBy) throws SQLException
+	public SubList<T> select(final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
 	{
 		return select(WILDCARD_STRING, whereExpression, startIndex, count, orderBy);	//select all columns
 	}
+
 	/**Selects records from the table using the given criteria.
 	@param selectExpression The SQL expression that selects the columns.
 	@param whereExpression The SQL expression that selects the records, or
 		<code>null</code> if all records should be returned.
 	@param startIndex The index of the first row to retrieve.
 	@param count The maximum number of rows to return.
-	@param orderBy The name of the column on which to sort, or
-		<code>null</code> if the default ordering should be used.
+	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> select(final String selectExpression, final String whereExpression, final int startIndex, final int count, String orderBy) throws SQLException
+	public SubList<T> select(final String selectExpression, final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
 	{
 		final Connection connection=getDataSource().getConnection();	//get a connection to the database
 		try
@@ -412,13 +452,13 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 				statementStringBuffer.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
 				if(whereExpression!=null && whereExpression.length()>0)  //if a valid expression was given
 				  statementStringBuffer.append(' ').append(WHERE).append(' ').append(whereExpression); //append " WHERE <var>whereExpression</var>"
-				if(orderBy==null) //if no ordering was given
+				if(orderBy.length==0)	//if no default ordering was given
 				{
 					orderBy=getDefaultOrderBy();  //use the default ordering
 				}
-				if(orderBy!=null)  //if we have an ordering
+				if(orderBy.length>0) //if we were given an ordering, or we have a default ordering
 				{
-				  statementStringBuffer.append(' ').append(ORDER_BY).append(' ').append(orderBy); //append " ORDER BY orderBy"
+				  statementStringBuffer.append(' ').append(ORDER_BY).append(' ').append(createList(orderBy)); //append " ORDER BY orderBy"
 				}
 				final ResultSet resultSet=statement.executeQuery(statementStringBuffer.toString()); //select the records
 				try
@@ -478,10 +518,12 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 	@return A list of objects representing all records in the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
+/**G***del; no longer needed with varargs
 	public SubList<T> selectAll() throws SQLException
 	{
 		return selectAll(null);  //select all records using the default ordering
 	}
+*/
 
 	/**Selects all records from the table within a given range.
 	@param startIndex The index of the first row to retrieve.
@@ -491,27 +533,27 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 	*/
 	public SubList<T> selectAll(final int startIndex, final int count) throws SQLException
 	{
-		return selectAll(startIndex, count, null);  //select all records using the default ordering
+		return selectAll(startIndex, count);  //select all records using the default ordering
 	}
 
 	/**Selects all records from the table.
-	@param orderBy The name of the column on which to sort.
+	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing all records in the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> selectAll(final String orderBy) throws SQLException
+	public SubList<T> selectAll(final Column... orderBy) throws SQLException
 	{
 		return select(null, orderBy);  //select all records using the given ordering
 	}
 
 	/**Selects all records from the table within a given range.
-	@param orderBy The name of the column on which to sort.
+	@param orderBy The columns on which to sort, if any.
 	@param startIndex The index of the first row to retrieve.
 	@param count The maximum number of rows to return.
 	@return A list of objects representing all records in the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> selectAll(final int startIndex, final int count, final String orderBy) throws SQLException
+	public SubList<T> selectAll(final int startIndex, final int count, final Column... orderBy) throws SQLException
 	{
 		return select(null, startIndex, count, orderBy);  //select all records using the given ordering
 	}
@@ -523,10 +565,12 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
+/*G***del if no longer needed
 	public SubList<T> selectColumn(final String columnName, final String columnValue) throws SQLException
 	{
 		return select(columnName+EQUALS+SINGLE_QUOTE+columnValue+SINGLE_QUOTE);  //select the records which have the correct value for this column
 	}
+*/
 
 	/**Selects a single record from the table for which the given column contains
 		the specified value.
@@ -536,36 +580,70 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 		if no record matches.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
+/*G***del if no longer needed
 	public T selectColumnRecord(final String columnName, final String columnValue) throws SQLException
 	{
 		final SubList<T> recordList=selectColumn(columnName, columnValue); //get all the matching records
 		return recordList.size()>0 ? recordList.get(0) : null;  //if there are records, return the first record we retrieved; otherwise, return null
 	}
+*/
 
-	/**Selects a single record by its primary key column.
-	@param primaryKeyValue The value of the primary key of the record to return.
+	/**Selects a single record by its primary key columns.
+	@param primaryKeyValues The value of the primary keys of the record to delete.
 	@return The object the primary key of which matches the given value, or
 		<code>null</code> if no record matches.
+	@exception IllegalArgumentException Thrown if no key values were provided.
+	@exception IllegalArgumentException Thrown if there are more values than
+		primary key columns.
 	@exception SQLException Thrown if there is an error processing the statement.
+	@see #getPrimaryKeys()
 	*/
-	public T selectByPrimaryKey(final String primaryKeyValue) throws SQLException
+	public T selectByPrimaryKey(final Object... primaryKeyValues) throws SQLException
 	{
-		return selectColumnRecord(getPrimaryKey(), primaryKeyValue);  //select the record based upon the primary key
+		if(primaryKeyValues.length==0)	//if no key values were provided
+		{
+			throw new IllegalArgumentException("No key values were provided");
+		}
+		//TODO update this to look through the columns for the primary key
+		final SubList<T> recordList=select(createColumnValues(getPrimaryKeys(), primaryKeyValues));  //select the record based upon the primary key
+//TODO probably split out this functionality as it was before		final SubList<T> recordList=selectColumn(columnName, columnValue); //get all the matching records
+		return recordList.size()>0 ? recordList.get(0) : null;  //if there are records, return the first record we retrieved; otherwise, return null
 	}
 
 	/**Updates a user in the database table.
-	@param primaryKeyValue The value of the primary key for which record to update.
 	@param object The new information for the record.
+	@param primaryKeyValues The value of the primary keys of the record to delete.
+	@exception IllegalArgumentException Thrown if no key values were provided.
+	@exception IllegalArgumentException Thrown if there are more values than
+		primary key columns.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public abstract void update(final String primaryKeyValue, final T object) throws SQLException;
+//G***del if not needed	public abstract void update(final T object, final Object... primaryKeyValues) throws SQLException;
+
+	/**Updates records by primary key columns.
+	@param updateColumnValues The array of column/value pair arrays to update.
+	@param primaryKeyValues The value of the primary keys of the record to delete.
+	@exception IllegalArgumentException Thrown if no key values were provided.
+	@exception IllegalArgumentException Thrown if there are more values than
+		primary key columns.
+	@exception SQLException Thrown if there is an error processing the statement.
+	@see #getPrimaryKeys()
+	*/
+	public void updateByPrimaryKey(final NameValuePair<Column, ?>[] updateColumnValues, final Object... primaryKeyValues) throws SQLException
+	{
+		if(primaryKeyValues.length==0)	//if no key values were provided
+		{
+			throw new IllegalArgumentException("No key values were provided");
+		}
+		update(updateColumnValues, createColumnValues(getPrimaryKeys(), primaryKeyValues));  //update the record based upon the primary keys
+	}
 
 	/**Inserts values into the table.
-	@param primaryKeyValue The value of the primary key for which record to update.
-	@param namesValues The array of name/value pair arrays to update.
+	@param updateColumnValues The array of column/value pair arrays to update.
+	@param whereColumnValues The column names and values to match.
 	@exception SQLException Thrown if there is an error processing the statement.
-	*/
-	protected void update(final String primaryKeyValue, final Object[][] namesValues) throws SQLException
+	*/	//TODO we probably need a way to make sure at least one column is passed; otherwise, update would probably update all records
+	protected void update(final NameValuePair<Column, ?>[] updateColumnValues, final NameValuePair<Column, ?>... whereColumnValues) throws SQLException
 	{
 		final Connection connection=getDataSource().getConnection();	//get a connection to the database
 		try
@@ -574,7 +652,7 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 			try
 			{
 				  //update the values for the row with the primary key value
-				SQLUtilities.updateTable(statement, getName(), namesValues, getPrimaryKey()+EQUALS+SINGLE_QUOTE+primaryKeyValue+SINGLE_QUOTE);
+				SQLUtilities.updateTable(statement, getName(), createNamesValues(updateColumnValues), SQLUtilities.createExpression(Conjunction.AND, createNamesValues(whereColumnValues)));
 			}
 			finally
 			{
@@ -636,5 +714,57 @@ public abstract class Table<T> implements SQLConstants, CharacterConstants
 		@param cacheTime The last time the cache was updated, in milliseconds.
 		*/
 		private void setLastCacheTime(final long cacheTime) {lastCacheTime=cacheTime;}
+
+	/**Creates an array of column-value pairs.
+	Only columns for which values are provided will be included.
+	@param columns The columns to include.
+	@param values The value to match with columns.
+	@return An array containing pairs of columns and values.
+	@exception IllegalArgumentException Thrown if there are more values than
+		columns.
+	*/
+	public static NameValuePair<Column, ?>[] createColumnValues(final Column[] columns, final Object[] values)
+	{
+		if(values.length>columns.length)	//if there are more values than columns
+		{
+			throw new IllegalArgumentException("There are "+values.length+" values but only "+columns.length+" columns.");
+		}
+		final NameValuePair<Column, ?>[] columnValues=new NameValuePair[values.length];	//create a new array to hold the column-value pairs
+		for(int i=values.length-1; i>=0; --i)	//look at each value
+		{
+				//create a name-value pair with the column and the value
+			columnValues[i]=new NameValuePair<Column, Object>(columns[i], values[i]);
+		}
+		return columnValues;	//return the array of columns and values		
+	}
+
+	/**Creates an array of name-value pairs containing the names of the given
+		columns and their values.
+	@param columnValues The columns and related values.
+	@return An array containing pairs of column names and values.
+	*/
+	public static NameValuePair<String, String>[] createNamesValues(final NameValuePair<Column, ?>[] columnValues)
+	{
+		final NameValuePair<String, String>[] namesValues=new NameValuePair[columnValues.length];	//create a new array
+		for(int i=columnValues.length-1; i>=0; --i)	//look at each column-value pair
+		{
+				//create a name-value pair with the column name and the value
+			namesValues[i]=new NameValuePair<String, String>(columnValues[i].getName().getName(), columnValues[i].getValue().toString());
+		}
+		return namesValues;	//return the array of names and values		
+	}
+
+	/**Creates a string representing a list of columns in SQL.
+	@param columns The columns to be placed in a list.
+	*/
+	public static String createList(final Column... columns)
+	{
+		final String[] columnNames=new String[columns.length];	//create an array of items
+		for(int i=columns.length-1; i>=0; --i)	//look at each column
+		{
+			columnNames[i]=columns[i].getName();	//store this column name
+		}
+		return SQLUtilities.createList(columnNames);	//create an SQL list from the column names
+	}
 
 }
