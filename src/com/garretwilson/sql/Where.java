@@ -17,16 +17,16 @@ public class Where
 		protected Conjunction getConjunction() {return conjunction;}
 
 	/**The column-value pairs to match.*/
-	private final NameValuePair<Column, ?>[] columnValues;
+	private final NameValuePair<Column<?>, ?>[] columnValues;
 
 		/**@return The column-value pairs to match.*/
-		protected NameValuePair<Column, ?>[] getColumnValues() {return columnValues;}
+		protected NameValuePair<Column<?>, ?>[] getColumnValues() {return columnValues;}
 
 	/**Creates an expression matching columns and values.
 	Requires all columns and values to match.
 	@param columnValues The column-value pairs to match.
 	*/	
-	public Where(final NameValuePair<Column, ?>... columnValues)
+	public Where(final NameValuePair<Column<?>, ?>... columnValues)
 	{
 		this(Conjunction.AND, columnValues);	//default requiring all columns and values to match
 	}
@@ -35,7 +35,7 @@ public class Where
 	@param conjunction The conjunction (AND or OR) for requiring matches.
 	@param columnValues The column-value pairs to match.
 	*/	
-	public Where(final Conjunction conjunction, final NameValuePair<Column, ?>... columnValues)
+	public Where(final Conjunction conjunction, final NameValuePair<Column<?>, ?>... columnValues)
 	{
 		this.conjunction=conjunction;	//save the conjunction
 		this.columnValues=columnValues;	//save the column-value pairs

@@ -10,6 +10,7 @@ import com.garretwilson.text.CharacterConstants;
 import com.garretwilson.util.*;
 
 import static com.garretwilson.sql.SQLConstants.*;
+import static com.garretwilson.sql.SQLUtilities.*;
 
 /**Facade pattern for accessing a table through SQL and JDBC.
 <p>Classes that extend this class must implement the following methods:</p>
@@ -41,16 +42,16 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 		public String getName() {return name;}
 
 	/**The definition of the table columns.*/
-	private final Column[] columns;
+	private final Column<?>[] columns;
 
 		/**@return The definition of the table columns.*/
-		protected Column[] getColumns() {return columns;}
+		protected Column<?>[] getColumns() {return columns;}
 
 	/**The table primary key columns, if any.*/
-	private final Column[] primaryKeys;
+	private final Column<?>[] primaryKeys;
 
 		/**@return The table primary key columns, if any.*/
-		public Column[] getPrimaryKeys() {return primaryKeys;}
+		public Column<?>[] getPrimaryKeys() {return primaryKeys;}
 
 		/**Sets the primary key column.
 		@param primaryKey The primary key column.
@@ -58,28 +59,28 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 //G***del		protected void setPrimaryKey(final Column primaryKey) {this.primaryKey=primaryKey;}
 
 	/**The default ordering column(s).*/
-	private Column[] defaultOrderBy=new Column[]{};
+	private Column<?>[] defaultOrderBy=new Column[]{};
 
 		/**@return The default ordering column(s), empty if there is no default ordering.*/
-		public Column[] getDefaultOrderBy() {return defaultOrderBy;}
+		public Column<?>[] getDefaultOrderBy() {return defaultOrderBy;}
 
 		/**Sets the default ordering.
 		@param orderBy The default ordering column(s), if any.
 		*/
-		protected void setDefaultOrderBy(final Column... orderBy) {this.defaultOrderBy=orderBy;}
+		protected void setDefaultOrderBy(final Column<?>... orderBy) {this.defaultOrderBy=orderBy;}
 
 	/**Constructor.
 	@param dataSource The connection factory.
 	@param name The name of the table.
 	@param definition The definition of the table.
 	*/
-	public Table(final DataSource dataSource, final String name, final Column... columns)
+	public Table(final DataSource dataSource, final String name, final Column<?>... columns)
 	{
 		this.dataSource=dataSource; //set the data source
 		this.name=name; //set the name
 		this.columns=columns;	//save the columns
-		final List<Column> primaryKeyList=new ArrayList<Column>(columns.length);	//create a list for colecting primary keys
-		for(final Column column:columns)	//look at each columns
+		final List<Column<?>> primaryKeyList=new ArrayList<Column<?>>(columns.length);	//create a list for colecting primary keys
+		for(final Column<?> column:columns)	//look at each columns
 		{
 //G***del			column.setTable(this);	//associate the column with this table
 			if(column.isPrimaryKey())	//if this columns is a primary key
@@ -97,11 +98,11 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 	protected String getSQLDefinition()
 	{
 		final StringBuilder stringBuilder=new StringBuilder();	//we'll accumulate the SQL definition here
-		final Column[] columns=getColumns();	//get the column definitions
+		final Column<?>[] columns=getColumns();	//get the column definitions
 //TODO del when works		final Column[] primaryKeys=getPrimaryKeys();	//get the primary keys
 		for(int i=0; i<columns.length; ++i)	//look at each column definition
 		{
-			final Column column=columns[i];	//look the current column			
+			final Column<?> column=columns[i];	//look the current column			
 			stringBuilder.append(column.getName()).append(SPACE_CHAR).append(getColumnSQLDefinition(column));	//add the column name and definition
 /*TODO del when works
 				//append the column name and type
@@ -122,7 +123,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 			stringBuilder.append(PRIMARY_KEY).append('(');	//PRIMARY KEY(
 			for(int i=0; i<primaryKeys.length; ++i)	//look at each primary key
 			{
-				final Column primaryKey=primaryKeys[i];	//look the current primary key
+				final Column<?> primaryKey=primaryKeys[i];	//look the current primary key
 				stringBuilder.append(primaryKey.getName());	//append the primary key
 				if(i<primaryKeys.length-1)	//if this isn't the last primary key
 				{
@@ -138,10 +139,20 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 	@param column	The column for which a definition should be created
 	@return An SQL definition of the column, not including the column name.
 	*/ 
-	protected String getColumnSQLDefinition(final Column column)
+	protected String getColumnSQLDefinition(final Column<?> column)
 	{
 		final StringBuilder stringBuilder=new StringBuilder();	//create a new string builder for constructing the definition
 		stringBuilder.append(column.getType());	//append the column type
+		final Object defaultValue=column.getDefaultValue();	//get the column's default value
+		if(defaultValue!=null)	//if the column has a default value
+		{
+			stringBuilder.append(SPACE_CHAR);
+			stringBuilder.append(DEFAULT);	//DEFAULT
+			stringBuilder.append(SPACE_CHAR);
+			stringBuilder.append(SINGLE_QUOTE);	//'
+			stringBuilder.append(createSQLValue(defaultValue.toString()));	//default value TODO create a method to automatically convert timestamps and the like
+			stringBuilder.append(SINGLE_QUOTE);	//'
+		}		
 		if(getPrimaryKeys().length==1 && column.isPrimaryKey())	//if this column is the only primary key
 		{
 			stringBuilder.append(SPACE_CHAR).append(PRIMARY_KEY);	//append the primary key designation
@@ -155,11 +166,13 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 	*/
 	public void synchronize() throws SQLException
 	{
+Debug.trace("synchronizing table", getName());
 		if(exists())	//if the table exists
 		{
-			final Column[] columns=getColumns();	//get our columns
-			final Map<String, Column> columnMap=new HashMap<String, Column>(columns.length);	//create a map to hold our column definitions, keyed by name
-			for(final Column column:columns)	//for each column
+Debug.trace("table exists");
+			final Column<?>[] columns=getColumns();	//get our columns
+			final Map<String, Column<?>> columnMap=new LinkedHashMap<String, Column<?>>(columns.length);	//create a map to hold our column definitions, keyed by name, maintaining the insertion order
+			for(final Column<?> column:columns)	//for each column
 			{
 				columnMap.put(column.getName(), column);	//add this column to the map
 			}
@@ -173,7 +186,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 			{
 Debug.trace("looking at column metadata", columnMetaData);	//TODO del
 				final String name=columnMetaData.getName();	//get the name of the column
-				final Column column=columnMap.get(name);	//see if we have a definition with this name
+				final Column<?> column=columnMap.get(name);	//see if we have a definition with this name
 				if(column!=null)	//if we know about this column
 				{
 Debug.trace("we know about this column", columnMetaData);
@@ -185,7 +198,7 @@ Debug.trace("we know about this column", columnMetaData);
 					//TODO delete the column from the underlying table
 				}
 			}
-			for(final Column column:columnMap.values())	//look at the remaining columns TODO important check the order; the mapped order could be anything
+			for(final Column<?> column:columnMap.values())	//look at the remaining columns TODO important check the order; the mapped order could be anything
 			{
 Debug.trace("we need to add column", column);
 				addColumn(column);	//add this column
@@ -206,7 +219,10 @@ Debug.trace("we need to add column", column);
 		try
 		{
 			final DatabaseMetaData metadata=connection.getMetaData();	//get database metadata
-			final ResultSet resultSet=metadata.getColumns(null, null, getName(), "%");	//get all columns for this table TODO use a constant for the JDBC wildcard
+				//use the uppercase form of the table name TODO check to see if this is implementation-specific or part of the JDBC specification
+				//SEE http://www.javaworld.com/javaworld/javatips/jw-javatip82.html
+				//SEE http://hsqldb.sourceforge.net/doc/src/org/hsqldb/jdbc/jdbcDatabaseMetaData.html#getColumns(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String)
+			final ResultSet resultSet=metadata.getColumns(null, null, getName().toUpperCase(), "%");	//get all columns for this table TODO use a constant for the JDBC wildcard
 			try
 			{
 				final List<ColumnMetaData> columnMetaDataList=new ArrayList<ColumnMetaData>();	//create a new list to hold the column metadata
@@ -290,7 +306,7 @@ Debug.trace("we need to add column", column);
 	@param columnValues The columns and values to match.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public void delete(final NameValuePair<Column, ?>... columnValues) throws SQLException
+	public void delete(final NameValuePair<Column<?>, ?>... columnValues) throws SQLException
 	{
 		delete(SQLUtilities.createExpression(Conjunction.AND, createNamesValues(columnValues)));  //delete the records which have the correct value for this columm
 	}
@@ -371,9 +387,11 @@ Debug.trace("we need to add column", column);
 	}
 
 	/**Adds a column to the table.
+	If the column has a default value, all the rows in the table will be set to the given default value.
+	@param column The column to add to the table.
 	@exception SQLException Thrown if there is an error accessing the database.
 	*/
-	protected void addColumn(final Column column) throws SQLException
+	protected void addColumn(final Column<?> column) throws SQLException
 	{
 		final Connection connection=getDataSource().getConnection();	//get a connection to the database
 		try
@@ -381,7 +399,16 @@ Debug.trace("we need to add column", column);
 			final Statement statement=connection.createStatement(); //create a statement
 			try
 			{
-				SQLUtilities.alterTableAddColumn(statement, getName(), column.getName(), getColumnSQLDefinition(column));	//add the column to the table
+					//TODO create a transaction here
+				alterTableAddColumn(statement, getName(), column.getName(), getColumnSQLDefinition(column));	//add the column to the table
+/*TODO del if not needed; passing a default value seems to automatically update the table when it is added 
+				final Object defaultValue=column.getDefaultValue();	//get the column's default value, if there is one
+				if(defaultValue!=null)	//if this column has a default value
+				{
+						//TODO create a method to automatically convert timestamps and the like
+					updateTable(statement, getName(), (NameValuePair<String, String>[])new NameValuePair[]{new NameValuePair<String, String>(column.getName(), defaultValue.toString())});	//update the new column with the default value
+				}
+*/
 			}
 			finally
 			{
@@ -495,8 +522,27 @@ Debug.trace("we need to add column", column);
 		//TODO find a better way to check for table existence, such as looking at database metadata, if there is a standard JDBC way to do that
 		try	
 		{
-			select("TOP 1 *", null, 0, Integer.MAX_VALUE);  //select the first record from the database TODO use constants, and create a convenience routine for selectExpression methods
-			return true;	//if we can select records from the table, the table exists
+//TODO del			select("TOP 1 *", null, 0, Integer.MAX_VALUE);  //select the first record from the database TODO use constants, and create a convenience routine for selectExpression methods
+			final Connection connection=getDataSource().getConnection();	//get a connection to the database
+			try
+			{
+				final Statement statement=connection.createStatement(); //create a statement
+				try
+				{
+						//execute a query directly; using the table's convenience methods may assume a structure that has not yet been synchronized
+					final ResultSet resultSet=statement.executeQuery(SELECT+' '+"TOP 1 *"+' '+FROM+' '+getName()); //select the first record from the database TODO use constants, and create a convenience routine for selectExpression methods
+					resultSet.close();	//always close the result set
+					return true;	//if we can select records from the table, the table exists
+				}
+				finally
+				{
+					statement.close();	//always close the statement
+				}
+			}
+			finally
+			{
+				connection.close();	//always close the connection
+			}
 		}
 		catch(SQLException sqlException)	//if there is any error
 		{
@@ -510,7 +556,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> select(final NameValuePair<Column, ?>... columnValues) throws SQLException
+	public SubList<T> select(final NameValuePair<Column<?>, ?>... columnValues) throws SQLException
 	{
 		return select(this, columnValues);	//select using this table as a factory
 	}
@@ -522,7 +568,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final NameValuePair<Column, ?>... columnValues) throws SQLException
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final NameValuePair<Column<?>, ?>... columnValues) throws SQLException
 	{
 		return select(factory, SQLUtilities.createExpression(Conjunction.AND, createNamesValues(columnValues)));	//select the records which have the correct values for the column
 	}
@@ -560,7 +606,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> select(final String expression, final Column... orderBy) throws SQLException
+	public SubList<T> select(final String expression, final Column<?>... orderBy) throws SQLException
 	{
 		return select(this, expression, orderBy);  //use this table as a factory
 	}
@@ -574,7 +620,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String expression, final Column... orderBy) throws SQLException
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String expression, final Column<?>... orderBy) throws SQLException
 	{
 		return select(factory, expression, 0, Integer.MAX_VALUE, orderBy);  //return all the rows we can find, starting at the first
 	}
@@ -589,7 +635,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> select(final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
+	public SubList<T> select(final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
 		return select(this, whereExpression, startIndex, count, orderBy);	//use this table as a factory
 	}
@@ -604,7 +650,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
 		return select(factory, WILDCARD_STRING, whereExpression, startIndex, count, orderBy);	//select all columns
 	}
@@ -620,7 +666,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> select(final String selectExpression, final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
+	public SubList<T> select(final String selectExpression, final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
 		return select(this, selectExpression, whereExpression, startIndex, count, orderBy);	//select using this table as a factory
 	}
@@ -636,7 +682,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
 		return select(factory, selectExpression, null, whereExpression, startIndex, count, orderBy);	//G***testing
 	}
@@ -654,7 +700,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/	//TODO eventually create objects for select, join, where, etc.
-	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final String joinExpression, final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final String joinExpression, final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
 		final Connection connection=getDataSource().getConnection();	//get a connection to the database
 		try
@@ -733,7 +779,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final Join join, final Where where, final Column... orderBy) throws SQLException
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final Join join, final Where where, final Column<?>... orderBy) throws SQLException
 	{
 		return select(factory, WILDCARD_STRING, join, where, orderBy);
 	}
@@ -749,7 +795,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final Join join, final Where where, final Column... orderBy) throws SQLException
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final Join join, final Where where, final Column<?>... orderBy) throws SQLException
 	{
 		return select(factory, selectExpression, join!=null ? join.toString() : null, where!=null ? where.toString() : null, 0, Integer.MAX_VALUE, orderBy);	//TODO eventually maybe do the serialization here, rather than relying on toString();
 	}
@@ -781,7 +827,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing all records in the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> selectAll(final Column... orderBy) throws SQLException
+	public SubList<T> selectAll(final Column<?>... orderBy) throws SQLException
 	{
 		return select(null, orderBy);  //select all records using the given ordering
 	}
@@ -793,7 +839,7 @@ Debug.trace("we need to add column", column);
 	@return A list of objects representing all records in the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> selectAll(final int startIndex, final int count, final Column... orderBy) throws SQLException
+	public SubList<T> selectAll(final int startIndex, final int count, final Column<?>... orderBy) throws SQLException
 	{
 		return select(null, startIndex, count, orderBy);  //select all records using the given ordering
 	}
@@ -869,7 +915,7 @@ Debug.trace("we need to add column", column);
 	@exception SQLException Thrown if there is an error processing the statement.
 	@see #getPrimaryKeys()
 	*/
-	public void updateByPrimaryKey(final NameValuePair<Column, ?>[] updateColumnValues, final Object... primaryKeyValues) throws SQLException
+	public void updateByPrimaryKey(final NameValuePair<Column<?>, ?>[] updateColumnValues, final Object... primaryKeyValues) throws SQLException
 	{
 		if(primaryKeyValues.length==0)	//if no key values were provided
 		{
@@ -883,7 +929,7 @@ Debug.trace("we need to add column", column);
 	@param whereColumnValues The column names and values to match.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/	//TODO we probably need a way to make sure at least one column is passed; otherwise, update would probably update all records
-	protected void update(final NameValuePair<Column, ?>[] updateColumnValues, final NameValuePair<Column, ?>... whereColumnValues) throws SQLException
+	protected void update(final NameValuePair<Column<?>, ?>[] updateColumnValues, final NameValuePair<Column<?>, ?>... whereColumnValues) throws SQLException
 	{
 		final Connection connection=getDataSource().getConnection();	//get a connection to the database
 		try
@@ -963,17 +1009,17 @@ Debug.trace("we need to add column", column);
 	@exception IllegalArgumentException Thrown if there are more values than
 		columns.
 	*/
-	public static NameValuePair<Column, ?>[] createColumnValues(final Column[] columns, final Object[] values)
+	public static NameValuePair<Column<?>, ?>[] createColumnValues(final Column<?>[] columns, final Object[] values)
 	{
 		if(values.length>columns.length)	//if there are more values than columns
 		{
 			throw new IllegalArgumentException("There are "+values.length+" values but only "+columns.length+" columns.");
 		}
-		final NameValuePair<Column, ?>[] columnValues=new NameValuePair[values.length];	//create a new array to hold the column-value pairs
+		final NameValuePair<Column<?>, ?>[] columnValues=new NameValuePair[values.length];	//create a new array to hold the column-value pairs
 		for(int i=values.length-1; i>=0; --i)	//look at each value
 		{
 				//create a name-value pair with the column and the value
-			columnValues[i]=new NameValuePair<Column, Object>(columns[i], values[i]);
+			columnValues[i]=new NameValuePair<Column<?>, Object>(columns[i], values[i]);
 		}
 		return columnValues;	//return the array of columns and values		
 	}
@@ -983,7 +1029,7 @@ Debug.trace("we need to add column", column);
 	@param columnValues The columns and related values.
 	@return An array containing pairs of column names and values.
 	*/
-	public static NameValuePair<String, String>[] createNamesValues(final NameValuePair<Column, ?>[] columnValues)
+	public static NameValuePair<String, String>[] createNamesValues(final NameValuePair<Column<?>, ?>[] columnValues)
 	{
 		final NameValuePair<String, String>[] namesValues=new NameValuePair[columnValues.length];	//create a new array
 		for(int i=columnValues.length-1; i>=0; --i)	//look at each column-value pair
@@ -998,7 +1044,7 @@ Debug.trace("we need to add column", column);
 	/**Creates a string representing a list of columns in SQL.
 	@param columns The columns to be placed in a list.
 	*/
-	public static String createList(final Column... columns)
+	public static String createList(final Column<?>... columns)
 	{
 		final String[] columnNames=new String[columns.length];	//create an array of items
 		for(int i=columns.length-1; i>=0; --i)	//look at each column
