@@ -2,6 +2,8 @@ package com.garretwilson.sql;
 
 import java.sql.*;
 import javax.sql.*;
+
+import com.garretwilson.text.CharacterConstants;
 import com.garretwilson.util.*;
 
 /**Facade pattern for accessing a table through SQL and JDBC.
@@ -15,7 +17,7 @@ import com.garretwilson.util.*;
 	to a cache that is always expired.</p>
 @author Garret Wilson
 */
-public abstract class Table<T> implements SQLConstants
+public abstract class Table<T> implements SQLConstants, CharacterConstants
 {
 
 	/**The SQL wildcard ('*') character in string format.*/
@@ -33,13 +35,11 @@ public abstract class Table<T> implements SQLConstants
 		/**@return The name of the table.*/
 		public String getName() {return name;}
 
-	/**The SQL definition string for the table, suitable for an "SQL CREATE
-		TABLE tableName <em>definition</em>" statement.
-	*/
-	private final String definition;
+	/**The definition of the table.*/
+	private final ColumnDefinition[] definition;
 
-		/**@return The SQL definition string for the table.*/
-		protected String getDefinition() {return definition;}
+		/**@return The definition of the table.*/
+		protected ColumnDefinition[] getDefinition() {return definition;}
 
 	/**The name of the table primary key column.*/
 	private final String primaryKey;
@@ -56,11 +56,10 @@ public abstract class Table<T> implements SQLConstants
 	/**Default order constructor.
 	@param dataSource The connection factory.
 	@param name The name of the table.
-	@param definition The SQL definition string for the table, suitable for an
-		"SQL CREATE TABLE tableName <em>definition</em>" statement.
+	@param definition The definition of the table.
 	@param primaryKey The name of the primiary key column.
 	*/
-	public Table(final DataSource dataSource, final String name, final String definition, final String primaryKey)
+	public Table(final DataSource dataSource, final String name, final ColumnDefinition[] definition, final String primaryKey)
 	{
 		this(dataSource, name, definition, primaryKey, null); //construct the object with no default ordering
 	}
@@ -68,12 +67,11 @@ public abstract class Table<T> implements SQLConstants
 	/**Constructor.
 	@param dataSource The connection factory.
 	@param name The name of the table.
-	@param definition The SQL definition string for the table, suitable for an
-		"SQL CREATE TABLE tableName <em>definition</em>" statement.
+	@param definition The definition of the table.
 	@param primaryKey The name of the primiary key column.
 	@param defaultOrderBy The name of the default ordering column(s).
 	*/
-	public Table(final DataSource dataSource, final String name, final String definition, final String primaryKey, final String defaultOrderBy)
+	public Table(final DataSource dataSource, final String name, final ColumnDefinition[] definition, final String primaryKey, final String defaultOrderBy)
 	{
 		this.dataSource=dataSource; //set the data source
 		this.name=name; //set the name
@@ -82,6 +80,28 @@ public abstract class Table<T> implements SQLConstants
 		this.defaultOrderBy=defaultOrderBy; //save the default ordering
 	}
 
+	/**@return A text definition suitable for an SQL CREATE TABLE <var>table</var>
+	 	<var>definition</var> statement.
+	@see #getDefinition()
+	*/
+	protected String getSQLDefinition()
+	{
+		final StringBuilder stringBuilder=new StringBuilder();	//we'll accumulate the SQL definition here
+		final ColumnDefinition[] columns=getDefinition();	//get the column definitions
+		for(ColumnDefinition column:columns)	//look at each column definition
+		{
+				//append the column name and type
+			stringBuilder.append(column.getName()).append(SPACE_CHAR).append(column.getType());
+			if(column.isPrimaryKey())	//if this columns is a primary key
+			{
+				stringBuilder.append(SPACE_CHAR).append(PRIMARY_KEY);	//append the primary key designation
+			}
+			stringBuilder.append(LIST_SEPARATOR).append(SPACE_CHAR);	//append a list separator and a space
+		}
+		stringBuilder.delete(stringBuilder.length()-2, stringBuilder.length());	//remove the last two characters, which together is a useless list delimiter sequence
+		return stringBuilder.toString();	//return the SQL definition string we constructed
+	}
+	
 	/**Creates the table after first deleting it if it already exists.
 	@exception SQLException Thrown if there is an error accessing the database.
 	*/
@@ -106,7 +126,7 @@ public abstract class Table<T> implements SQLConstants
 				{
 					drop(true);	//remove the table if it exists
 				}
-				SQLUtilities.createTable(statement, getName(), getDefinition());	//create the table
+				SQLUtilities.createTable(statement, getName(), getSQLDefinition());	//create the table
 				invalidateCachedRecordCount();	//any cached record count is no longer valid
 			}
 			finally
