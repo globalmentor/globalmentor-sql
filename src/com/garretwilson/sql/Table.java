@@ -18,6 +18,9 @@ import com.garretwilson.util.*;
 public abstract class Table<T> implements SQLConstants
 {
 
+	/**The SQL wildcard ('*') character in string format.*/
+	protected final static String WILDCARD_STRING=String.valueOf(WILDCARD_CHAR);
+	
 	/**The data source that allows access to the database.*/
 	private final DataSource dataSource;
 
@@ -288,6 +291,27 @@ public abstract class Table<T> implements SQLConstants
 	*/
 	protected abstract T retrieve(final ResultSet resultSet) throws SQLException;
 
+	/**Determines if a table exists in the database.
+	@return <code>true</code> if the table exists, else <code>false</code>.
+	@exception SQLException Thrown if there is an error accessing the database.
+	*/
+	public boolean exists() throws SQLException
+	{
+		//This function uses a brute-force method of checking for table existence:
+		//trying to access the first row in the table, and assuming that any error
+		//means the table does not exist.
+		//TODO find a better way to check for table existence, such as looking at database metadata, if there is a standard JDBC way to do that
+		try	
+		{
+			select("TOP 1 *", null, 0, Integer.MAX_VALUE, null);  //select the first record from the database TODO use constants, and create a convenience routine for selectExpression methods
+			return true;	//if we can select records from the table, the table exists
+		}
+		catch(SQLException sqlException)	//if there is any error
+		{
+			return false;	//assume the table doesn't exist
+		}
+	}
+
 	/**Selects all the records from the table using the given criteria with the
 		default ordering.
 	@param expression The SQL expression that selects the records, or
@@ -327,8 +351,8 @@ public abstract class Table<T> implements SQLConstants
 		return select(expression, 0, Integer.MAX_VALUE, orderBy);  //return all the rows we can find, starting at the first
 	}
 
-	/**Selects records from the table using the given criteria.
-	@param expression The SQL expression that selects the records, or
+	/**Selects all columns of records from the table using the given criteria.
+	@param whereExpression The SQL expression that selects the records, or
 		<code>null</code> if all records should be returned.
 	@param startIndex The index of the first row to retrieve.
 	@param count The maximum number of rows to return.
@@ -337,7 +361,22 @@ public abstract class Table<T> implements SQLConstants
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList<T> select(final String expression, final int startIndex, final int count, String orderBy) throws SQLException
+	public SubList<T> select(final String whereExpression, final int startIndex, final int count, String orderBy) throws SQLException
+	{
+		return select(WILDCARD_STRING, whereExpression, startIndex, count, orderBy);	//select all columns
+	}
+	/**Selects records from the table using the given criteria.
+	@param selectExpression The SQL expression that selects the columns.
+	@param whereExpression The SQL expression that selects the records, or
+		<code>null</code> if all records should be returned.
+	@param startIndex The index of the first row to retrieve.
+	@param count The maximum number of rows to return.
+	@param orderBy The name of the column on which to sort, or
+		<code>null</code> if the default ordering should be used.
+	@return A list of objects representing matched records.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	public SubList<T> select(final String selectExpression, final String whereExpression, final int startIndex, final int count, String orderBy) throws SQLException
 	{
 		final Connection connection=getDataSource().getConnection();	//get a connection to the database
 		try
@@ -349,10 +388,10 @@ public abstract class Table<T> implements SQLConstants
 			{
 					//create a statement for selecting the records: "SELECT * FROM table WHERE expression"
 				final StringBuffer statementStringBuffer=new StringBuffer();  //create a string buffer in which to construct the statement
-				statementStringBuffer.append(SELECT).append(' ').append(WILDCARD_CHAR); //append "SELECT *"
+				statementStringBuffer.append(SELECT).append(' ').append(selectExpression); //append "SELECT <var>selectExpression</var>"
 				statementStringBuffer.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
-				if(expression!=null && expression.length()>0)  //if a valid expression was given
-				  statementStringBuffer.append(' ').append(WHERE).append(' ').append(expression); //append " WHERE expression"
+				if(whereExpression!=null && whereExpression.length()>0)  //if a valid expression was given
+				  statementStringBuffer.append(' ').append(WHERE).append(' ').append(whereExpression); //append " WHERE <var>whereExpression</var>"
 				if(orderBy==null) //if no ordering was given
 				{
 					orderBy=getDefaultOrderBy();  //use the default ordering
