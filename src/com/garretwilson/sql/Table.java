@@ -112,7 +112,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 				stringBuilder.append(SPACE_CHAR).append(PRIMARY_KEY);	//append the primary key designation
 			}
 */
-			stringBuilder.append(getColumnSQLDefinition(column));	//add the definition for this column
+//TODO del; apparently duplicated in error			stringBuilder.append(getColumnSQLDefinition(column));	//add the definition for this column
 			if(i<columns.length-1 || primaryKeys.length>1)	//if this isn't the last column, or there are primary keys to list
 			{
 				stringBuilder.append(LIST_SEPARATOR).append(SPACE_CHAR);	//append a list separator and a space
