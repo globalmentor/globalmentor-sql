@@ -5,17 +5,17 @@ import javax.sql.*;
 import com.garretwilson.util.*;
 
 /**Facade pattern for accessing a table through SQL and JDBC.
-<p>Classes that extend this class should implement the following methods:</p>
+<p>Classes that extend this class must implement the following methods:</p>
 <ul>
-  <li><code>public void insert(<em>ObjectType</em>)</code></li>
-	<li><code>protected Object retrieve(ResultSet)</code></li>
-  <li><code>public void update(final String primaryKeyValue, <em>ObjectType</em>)</code></li>
+  <li><code>public void insert(<var>T</var>)</code></li>
+	<li><code>protected <var>T</var> retrieve(ResultSet)</code></li>
+  <li><code>public void update(final String primaryKeyValue, <var>T</var>)</code></li>
 </ul>
 <p>This class has the capability of caching database record count, but defaults
 	to a cache that is always expired.</p>
 @author Garret Wilson
 */
-public abstract class Table implements SQLConstants
+public abstract class Table<T> implements SQLConstants
 {
 
 	/**The data source that allows access to the database.*/
@@ -49,8 +49,6 @@ public abstract class Table implements SQLConstants
 
 		/**@return The name of the default ordering column(s).*/
 		public String getDefaultOrderBy() {return defaultOrderBy;}
-
-
 
 	/**Default order constructor.
 	@param dataSource The connection factory.
@@ -250,6 +248,12 @@ public abstract class Table implements SQLConstants
 		}
 	}
 
+	/**Inserts an object into the table.
+	@param object The object to insert.
+	@exception SQLException Thrown if there is an error accessing the table.
+	*/
+	public abstract void insert(final T object) throws SQLException;
+
 	/**Inserts values into the table.
 	@param values The array of values to insert into the table.
 	@exception SQLException Thrown if there is an error processing the statement.
@@ -282,7 +286,7 @@ public abstract class Table implements SQLConstants
 	@return A new object with information from the current row in the result set.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	protected abstract Object retrieve(final ResultSet resultSet) throws SQLException;
+	protected abstract T retrieve(final ResultSet resultSet) throws SQLException;
 
 	/**Selects all the records from the table using the given criteria with the
 		default ordering.
@@ -291,7 +295,7 @@ public abstract class Table implements SQLConstants
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList select(final String expression) throws SQLException
+	public SubList<T> select(final String expression) throws SQLException
 	{
 		return select(expression, 0, Integer.MAX_VALUE);  //return all the rows we can find, starting at the first
 	}
@@ -305,7 +309,7 @@ public abstract class Table implements SQLConstants
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList select(final String expression, final int startIndex, final int count) throws SQLException
+	public SubList<T> select(final String expression, final int startIndex, final int count) throws SQLException
 	{
 		return select(expression, startIndex, count, null); //select all the rows within the given range using the default ordering
 	}
@@ -318,7 +322,7 @@ public abstract class Table implements SQLConstants
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList select(final String expression, final String orderBy) throws SQLException
+	public SubList<T> select(final String expression, final String orderBy) throws SQLException
 	{
 		return select(expression, 0, Integer.MAX_VALUE, orderBy);  //return all the rows we can find, starting at the first
 	}
@@ -333,7 +337,7 @@ public abstract class Table implements SQLConstants
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList select(final String expression, final int startIndex, final int count, String orderBy) throws SQLException
+	public SubList<T> select(final String expression, final int startIndex, final int count, String orderBy) throws SQLException
 	{
 		final Connection connection=getDataSource().getConnection();	//get a connection to the database
 		try
@@ -360,7 +364,7 @@ public abstract class Table implements SQLConstants
 				final ResultSet resultSet=statement.executeQuery(statementStringBuffer.toString()); //select the records
 				try
 				{
-					final ArraySubList list=new ArraySubList();	//create a list of results
+					final ArraySubList<T> list=new ArraySubList<T>();	//create a list of results
 					list.setStartIndex(startIndex); //show for what index we're returning results
 					final int startRow=startIndex+1; //we'll start at the requested row
 					final int endRow=count<Integer.MAX_VALUE ? startRow+count : Integer.MAX_VALUE; //we'll end when we get past the requested count (allowing for a requested maximum amount)
@@ -415,7 +419,7 @@ public abstract class Table implements SQLConstants
 	@return A list of objects representing all records in the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList selectAll() throws SQLException
+	public SubList<T> selectAll() throws SQLException
 	{
 		return selectAll(null);  //select all records using the default ordering
 	}
@@ -426,7 +430,7 @@ public abstract class Table implements SQLConstants
 	@return A list of objects representing all records in the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList selectAll(final int startIndex, final int count) throws SQLException
+	public SubList<T> selectAll(final int startIndex, final int count) throws SQLException
 	{
 		return selectAll(startIndex, count, null);  //select all records using the default ordering
 	}
@@ -436,7 +440,7 @@ public abstract class Table implements SQLConstants
 	@return A list of objects representing all records in the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList selectAll(final String orderBy) throws SQLException
+	public SubList<T> selectAll(final String orderBy) throws SQLException
 	{
 		return select(null, orderBy);  //select all records using the given ordering
 	}
@@ -448,7 +452,7 @@ public abstract class Table implements SQLConstants
 	@return A list of objects representing all records in the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList selectAll(final int startIndex, final int count, final String orderBy) throws SQLException
+	public SubList<T> selectAll(final int startIndex, final int count, final String orderBy) throws SQLException
 	{
 		return select(null, startIndex, count, orderBy);  //select all records using the given ordering
 	}
@@ -460,7 +464,7 @@ public abstract class Table implements SQLConstants
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public SubList selectColumn(final String columnName, final String columnValue) throws SQLException
+	public SubList<T> selectColumn(final String columnName, final String columnValue) throws SQLException
 	{
 		return select(columnName+EQUALS+SINGLE_QUOTE+columnValue+SINGLE_QUOTE);  //select the records which have the correct value for this column
 	}
@@ -473,9 +477,9 @@ public abstract class Table implements SQLConstants
 		if no record matches.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public Object selectColumnRecord(final String columnName, final String columnValue) throws SQLException
+	public T selectColumnRecord(final String columnName, final String columnValue) throws SQLException
 	{
-		final SubList recordList=selectColumn(columnName, columnValue); //get all the matching records
+		final SubList<T> recordList=selectColumn(columnName, columnValue); //get all the matching records
 		return recordList.size()>0 ? recordList.get(0) : null;  //if there are records, return the first record we retrieved; otherwise, return null
 	}
 
@@ -485,10 +489,17 @@ public abstract class Table implements SQLConstants
 		<code>null</code> if no record matches.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public Object selectByPrimaryKey(final String primaryKeyValue) throws SQLException
+	public T selectByPrimaryKey(final String primaryKeyValue) throws SQLException
 	{
 		return selectColumnRecord(getPrimaryKey(), primaryKeyValue);  //select the record based upon the primary key
 	}
+
+	/**Updates a user in the database table.
+	@param primaryKeyValue The value of the primary key for which record to update.
+	@param object The new information for the record.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	protected abstract void update(final String primaryKeyValue, final T object) throws SQLException;
 
 	/**Inserts values into the table.
 	@param primaryKeyValue The value of the primary key for which record to update.
