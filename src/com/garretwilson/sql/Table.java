@@ -21,7 +21,7 @@ import static com.garretwilson.sql.SQLConstants.*;
 	to a cache that is always expired.</p>
 @author Garret Wilson
 */
-public abstract class Table<T> implements CharacterConstants
+public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterConstants
 {
 
 	/**The SQL wildcard ('*') character in string format.*/
@@ -80,6 +80,7 @@ public abstract class Table<T> implements CharacterConstants
 		final List<Column> primaryKeyList=new ArrayList<Column>(columns.length);	//create a list for colecting primary keys
 		for(final Column column:columns)	//look at each columns
 		{
+//G***del			column.setTable(this);	//associate the column with this table
 			if(column.isPrimaryKey())	//if this columns is a primary key
 			{
 				primaryKeyList.add(column);	//add this column to our list of primary keys
@@ -96,17 +97,35 @@ public abstract class Table<T> implements CharacterConstants
 	{
 		final StringBuilder stringBuilder=new StringBuilder();	//we'll accumulate the SQL definition here
 		final Column[] columns=getColumns();	//get the column definitions
-		for(Column column:columns)	//look at each column definition
+		final Column[] primaryKeys=getPrimaryKeys();	//get the primary keys
+		for(int i=0; i<columns.length; ++i)	//look at each column definition
 		{
+			final Column column=columns[i];	//look the current column
 				//append the column name and type
 			stringBuilder.append(column.getName()).append(SPACE_CHAR).append(column.getType());
-			if(column.isPrimaryKey())	//if this columns is a primary key
+			if(primaryKeys.length==1 && column.isPrimaryKey())	//if this columns is the only primary key
 			{
 				stringBuilder.append(SPACE_CHAR).append(PRIMARY_KEY);	//append the primary key designation
 			}
-			stringBuilder.append(LIST_SEPARATOR).append(SPACE_CHAR);	//append a list separator and a space
+			if(i<columns.length-1 || primaryKeys.length>1)	//if this isn't the last column, or there are primary keys to list
+			{
+				stringBuilder.append(LIST_SEPARATOR).append(SPACE_CHAR);	//append a list separator and a space
+			}
 		}
-		stringBuilder.delete(stringBuilder.length()-2, stringBuilder.length());	//remove the last two characters, which together is a useless list delimiter sequence
+		if(primaryKeys.length>1)	//if there were more than one primary key
+		{
+			stringBuilder.append(PRIMARY_KEY).append('(');	//PRIMARY KEY(
+			for(int i=0; i<primaryKeys.length; ++i)	//look at each primary key
+			{
+				final Column primaryKey=primaryKeys[i];	//look the current primary key
+				stringBuilder.append(primaryKey.getName());	//append the primary key
+				if(i<primaryKeys.length-1)	//if this isn't the last primray key
+				{
+					stringBuilder.append(LIST_SEPARATOR).append(SPACE_CHAR);	//append a list separator and a space
+				}
+			}			
+			stringBuilder.append(')');	//)
+		}
 		return stringBuilder.toString();	//return the SQL definition string we constructed
 	}
 	
@@ -361,18 +380,30 @@ public abstract class Table<T> implements CharacterConstants
 	}
 
 	/**Selects all the records from the table for which the given columns contains
-		the specified values.
+		the specified values, using this table as the factory to create objects.
 	@param columnValues The column-value pairs to match.
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
 	public SubList<T> select(final NameValuePair<Column, ?>... columnValues) throws SQLException
 	{
-		return select(SQLUtilities.createExpression(Conjunction.AND, createNamesValues(columnValues)));	//select the records which have the correct values for the column
+		return select(this, columnValues);	//select using this table as a factory
+	}
+
+	/**Selects all the records from the table for which the given columns contains
+		the specified values.
+	@param factory The object factory used to create objects from the result set.
+	@param columnValues The column-value pairs to match.
+	@return A list of objects representing matched records.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final NameValuePair<Column, ?>... columnValues) throws SQLException
+	{
+		return select(factory, SQLUtilities.createExpression(Conjunction.AND, createNamesValues(columnValues)));	//select the records which have the correct values for the column
 	}
 
 	/**Selects all the records from the table using the given criteria with the
-		default ordering.
+		default ordering, using this table as the factory to create objects.
 	@param expression The SQL expression that selects the records, or
 		<code>null</code> if all records should be returned.
 	@return A list of objects representing matched records.
@@ -380,27 +411,24 @@ public abstract class Table<T> implements CharacterConstants
 	*/
 	public SubList<T> select(final String expression) throws SQLException
 	{
-		return select(expression, 0, Integer.MAX_VALUE);  //return all the rows we can find, starting at the first
+		return select(this, expression);	//select using this table as a factory
 	}
 
-	/**Selects records from the table using the given criteria with the default
-		ordering.
+	/**Selects all the records from the table using the given criteria with the
+		default ordering.
+	@param factory The object factory used to create objects from the result set.
 	@param expression The SQL expression that selects the records, or
 		<code>null</code> if all records should be returned.
-	@param startIndex The index of the first row to retrieve.
-	@param count The maximum number of rows to return.
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-/*G***del if not needed after varargs
-	public SubList<T> select(final String expression, final int startIndex, final int count) throws SQLException
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String expression) throws SQLException
 	{
-		return select(expression, startIndex, count); //select all the rows within the given range using the default ordering
+		return select(factory, expression, 0, Integer.MAX_VALUE);  //return all the rows we can find, starting at the first
 	}
-*/
 
 	/**Selects all the records from the table using the given criteria, sorting
-		on the given column.
+		on the given column and using this table as the factory to create objects.
 	@param expression The SQL expression that selects the records, or
 		<code>null</code> if all records should be returned.
 	@param orderBy The columns on which to sort, if any.
@@ -409,10 +437,25 @@ public abstract class Table<T> implements CharacterConstants
 	*/
 	public SubList<T> select(final String expression, final Column... orderBy) throws SQLException
 	{
-		return select(expression, 0, Integer.MAX_VALUE, orderBy);  //return all the rows we can find, starting at the first
+		return select(this, expression, orderBy);  //use this table as a factory
 	}
 
-	/**Selects all columns of records from the table using the given criteria.
+	/**Selects all the records from the table using the given criteria, sorting
+		on the given column.
+	@param factory The object factory used to create objects from the result set.
+	@param expression The SQL expression that selects the records, or
+		<code>null</code> if all records should be returned.
+	@param orderBy The columns on which to sort, if any.
+	@return A list of objects representing matched records.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String expression, final Column... orderBy) throws SQLException
+	{
+		return select(factory, expression, 0, Integer.MAX_VALUE, orderBy);  //return all the rows we can find, starting at the first
+	}
+
+	/**Selects all columns of records from the table using the given criteria,
+		using this table as the factory to create objects.
 	@param whereExpression The SQL expression that selects the records, or
 		<code>null</code> if all records should be returned.
 	@param startIndex The index of the first row to retrieve.
@@ -423,10 +466,26 @@ public abstract class Table<T> implements CharacterConstants
 	*/
 	public SubList<T> select(final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
 	{
-		return select(WILDCARD_STRING, whereExpression, startIndex, count, orderBy);	//select all columns
+		return select(this, whereExpression, startIndex, count, orderBy);	//use this table as a factory
 	}
 
-	/**Selects records from the table using the given criteria.
+	/**Selects all columns of records from the table using the given criteria.
+	@param factory The object factory used to create objects from the result set.
+	@param whereExpression The SQL expression that selects the records, or
+		<code>null</code> if all records should be returned.
+	@param startIndex The index of the first row to retrieve.
+	@param count The maximum number of rows to return.
+	@param orderBy The columns on which to sort, if any.
+	@return A list of objects representing matched records.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
+	{
+		return select(factory, WILDCARD_STRING, whereExpression, startIndex, count, orderBy);	//select all columns
+	}
+
+	/**Selects records from the table using the given criteria, using this
+		table as the factory to create objects.
 	@param selectExpression The SQL expression that selects the columns.
 	@param whereExpression The SQL expression that selects the records, or
 		<code>null</code> if all records should be returned.
@@ -437,6 +496,40 @@ public abstract class Table<T> implements CharacterConstants
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
 	public SubList<T> select(final String selectExpression, final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
+	{
+		return select(this, selectExpression, whereExpression, startIndex, count, orderBy);	//select using this table as a factory
+	}
+
+	/**Selects records from the table using the given criteria.
+	@param factory The object factory used to create objects from the result set.
+	@param selectExpression The SQL expression that selects the columns.
+	@param whereExpression The SQL expression that selects the records, or
+		<code>null</code> if all records should be returned.
+	@param startIndex The index of the first row to retrieve.
+	@param count The maximum number of rows to return.
+	@param orderBy The columns on which to sort, if any.
+	@return A list of objects representing matched records.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
+	{
+		return select(factory, selectExpression, null, whereExpression, startIndex, count, orderBy);	//G***testing
+	}
+
+	/**Selects records from the table using the given criteria.
+	@param factory The object factory used to create objects from the result set.
+	@param selectExpression The SQL expression that selects the columns.
+	@param joinExpression The complete SQL expression for joining tables,
+		or <code>null</code> if no tables are being joined.
+	@param whereExpression The SQL expression that selects the records, or
+		<code>null</code> if all records should be returned.
+	@param startIndex The index of the first row to retrieve.
+	@param count The maximum number of rows to return.
+	@param orderBy The columns on which to sort, if any.
+	@return A list of objects representing matched records.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/	//TODO eventually create objects for select, join, where, etc.
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final String joinExpression, final String whereExpression, final int startIndex, final int count, Column... orderBy) throws SQLException
 	{
 		final Connection connection=getDataSource().getConnection();	//get a connection to the database
 		try
@@ -450,8 +543,14 @@ public abstract class Table<T> implements CharacterConstants
 				final StringBuffer statementStringBuffer=new StringBuffer();  //create a string buffer in which to construct the statement
 				statementStringBuffer.append(SELECT).append(' ').append(selectExpression); //append "SELECT <var>selectExpression</var>"
 				statementStringBuffer.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
+				if(joinExpression!=null)	//if we are joining
+				{
+				  statementStringBuffer.append(' ').append(joinExpression); //append "<var>joinStatement</var>"
+				}
 				if(whereExpression!=null && whereExpression.length()>0)  //if a valid expression was given
+				{
 				  statementStringBuffer.append(' ').append(WHERE).append(' ').append(whereExpression); //append " WHERE <var>whereExpression</var>"
+				}
 				if(orderBy.length==0)	//if no default ordering was given
 				{
 					orderBy=getDefaultOrderBy();  //use the default ordering
@@ -460,10 +559,11 @@ public abstract class Table<T> implements CharacterConstants
 				{
 				  statementStringBuffer.append(' ').append(ORDER_BY).append(' ').append(createList(orderBy)); //append " ORDER BY orderBy"
 				}
+Debug.trace("ready to execute SQL statement: ", statementStringBuffer);	//G***del
 				final ResultSet resultSet=statement.executeQuery(statementStringBuffer.toString()); //select the records
 				try
 				{
-					final ArraySubList<T> list=new ArraySubList<T>();	//create a list of results
+					final ArraySubList<F> list=new ArraySubList<F>();	//create a list of results
 					list.setStartIndex(startIndex); //show for what index we're returning results
 					final int startRow=startIndex+1; //we'll start at the requested row
 					final int endRow=count<Integer.MAX_VALUE ? startRow+count : Integer.MAX_VALUE; //we'll end when we get past the requested count (allowing for a requested maximum amount)
@@ -473,7 +573,7 @@ public abstract class Table<T> implements CharacterConstants
 					{
 						while(row<endRow) //while we're not past the ending row
 						{
-							list.add(retrieve(resultSet)); //retrieve the object from the row and add it to our list
+							list.add(factory.retrieve(resultSet)); //retrieve the object from the row and add it to our list
 							if(resultSet.next())  //if there is another row
 							{
 								++row;  //show that we just went to the next row
@@ -511,7 +611,22 @@ public abstract class Table<T> implements CharacterConstants
 		{
 			connection.close();	//always close the connection
 		}
-//G***del		return list;	//return the list of objects representing the records we found
+	}
+
+	/**Selects records from the table using the given criteria.
+	@param factory The object factory used to create objects from the result set.
+	@param selectExpression The SQL expression that selects the columns.
+	@param join The SQL join representation,
+		or <code>null</code> if no tables are being joined.
+	@param where The SQL records selection, or
+		<code>null</code> if all records should be returned.
+	@param orderBy The columns on which to sort, if any.
+	@return A list of objects representing matched records.
+	@exception SQLException Thrown if there is an error processing the statement.
+	*/
+	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final Join join, final Where where, final Column... orderBy) throws SQLException
+	{
+		return select(factory, selectExpression, join!=null ? join.toString() : null, where!=null ? where.toString() : null, 0, Integer.MAX_VALUE, orderBy);	//TODO eventually maybe do the serialization here, rather than relying on toString();
 	}
 
 	/**Selects all records from the table.
