@@ -559,7 +559,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 				{
 				  statementStringBuffer.append(' ').append(ORDER_BY).append(' ').append(createList(orderBy)); //append " ORDER BY orderBy"
 				}
-Debug.trace("ready to execute SQL statement: ", statementStringBuffer);	//G***del
+//G***del Debug.trace("ready to execute SQL statement: ", statementStringBuffer);	//G***del
 				final ResultSet resultSet=statement.executeQuery(statementStringBuffer.toString()); //select the records
 				try
 				{
