@@ -85,7 +85,7 @@ public class SQLUtilities
 		for(int i=0; i<values.length; ++i)	//look at each of the values
 		{
 			final Object value=values[i]; //get this value
-			if(value!=null) //if we have a valid value
+			if(value!=null) //if we have a valid value	TODO refactor with a new createSQLValue() method that takes care of all this
 			{
 				valueStringBuffer.append(SINGLE_QUOTE);
 			  valueStringBuffer.append(createSQLValue(value.toString())); //add the string representation of this object to our value string
@@ -158,9 +158,17 @@ public class SQLUtilities
 		{
 			valueStringBuffer.append(namesValues[i].getName());  //append the name
 			valueStringBuffer.append(EQUALS); //append '='
-			valueStringBuffer.append(SINGLE_QUOTE);
-			valueStringBuffer.append(createSQLValue(namesValues[i].getValue())); //append the value
-			valueStringBuffer.append(SINGLE_QUOTE);
+			final Object value=namesValues[i].getValue();	//TODO refactor
+			if(value!=null) //if we have a valid value	TODO refactor with a new createSQLValue() method that takes care of all this
+			{
+				valueStringBuffer.append(SINGLE_QUOTE);
+				valueStringBuffer.append(createSQLValue(value.toString())); //append the value
+				valueStringBuffer.append(SINGLE_QUOTE);
+			}
+			else  //if we don't have a valid value
+			{
+			  valueStringBuffer.append(NULL); //add an SQL NULL value
+			}
 			if(i<namesValues.length-1) //if we have more names and values to go
 			{
 				valueStringBuffer.append(LIST_SEPARATOR).append(' ');  //separate the values

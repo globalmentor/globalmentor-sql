@@ -863,8 +863,9 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterCo
 		final NameValuePair<String, String>[] namesValues=new NameValuePair[columnValues.length];	//create a new array
 		for(int i=columnValues.length-1; i>=0; --i)	//look at each column-value pair
 		{
-				//create a name-value pair with the column name and the value
-			namesValues[i]=new NameValuePair<String, String>(columnValues[i].getName().getName(), columnValues[i].getValue().toString());
+			final Object value=columnValues[i].getValue();	//get the column value
+				//create a name-value pair with the column name and the value, or null if there is no value
+			namesValues[i]=new NameValuePair<String, String>(columnValues[i].getName().getName(), value!=null ? value.toString() : null);
 		}
 		return namesValues;	//return the array of names and values		
 	}
