@@ -4,11 +4,9 @@ import java.io.File;
 import java.sql.*;
 import java.text.*;
 import java.util.*;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.*;
-import com.garretwilson.lang.SystemConstants;
-import com.garretwilson.sql.*;
+import static com.garretwilson.lang.SystemUtilities.*;
 import com.garretwilson.util.Debug;
 
 /**A class that facilitates access to JDBC databases.
@@ -104,7 +102,7 @@ public class JDBCManager implements JDBCConstants
 		}
 		else  //if a directory was not given
 		{
-			databaseDirectory=new File(System.getProperty(SystemConstants.USER_HOME_PROPERTY));  //use the home directory
+			databaseDirectory=getUserHomeDirectory();  //use the home directory
 		}
 	}
 
