@@ -6,7 +6,7 @@ import static java.util.Collections.*;
 
 import javax.sql.*;
 
-import com.garretwilson.text.CharacterConstants;
+import static com.garretwilson.text.CharacterConstants.*;
 import com.garretwilson.util.*;
 
 import static com.garretwilson.sql.SQLConstants.*;
@@ -23,7 +23,7 @@ import static com.garretwilson.sql.SQLUtilities.*;
 	to a cache that is always expired.</p>
 @author Garret Wilson
 */
-public abstract class Table<T> implements ResultSetObjectFactory<T>, CharacterConstants
+public abstract class Table<T> implements ResultSetObjectFactory<T>
 {
 
 	/**The SQL wildcard ('*') character in string format.*/
