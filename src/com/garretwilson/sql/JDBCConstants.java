@@ -3,7 +3,7 @@ package com.garretwilson.sql;
 /**Common constants used by JDBC.
 @author Garret Wilson
 */
-public interface JDBCConstants
+public class JDBCConstants
 {
 	/**The property for the JDBC username.*/
 	public final static String USER_PROPERTY="user";

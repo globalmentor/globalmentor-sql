@@ -4,14 +4,16 @@ import java.io.PrintWriter;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
+
+import static com.garretwilson.sql.JDBCConstants.*;
 import com.garretwilson.util.Debug;
 
 /**A default implementation of a data source that allows direct connections
-	to the database using the <code>DriverManager</code>.
+	to the database using the {@link DriverManager}.
 @author Garret Wilson
 @see DriverManager
 */
-public class DefaultDataSource implements DataSource, JDBCConstants
+public class DefaultDataSource implements DataSource
 {
 
 	/**The URL identifying the database.*/
@@ -176,4 +178,28 @@ public class DefaultDataSource implements DataSource, JDBCConstants
 //G***del		loginTimeout=seconds; //set the login timeout
 		DriverManager.setLoginTimeout(seconds); //update the login timeout
 	}
+
+  /**Returns an object that implements the given interface to allow access to non-standard methods, or standard methods not exposed by the proxy.
+  This implementation always throws an {@link SQLException}.
+	@param iface A class defining an interface that the result must implement.
+	@return An object that implements the interface. May be a proxy for the actual implementing object.
+	@throws SQLException If no object found that implements the interface 
+	*/
+  public <T> T unwrap(final Class<T> iface) throws SQLException
+  {
+  	throw new SQLException("No implementation of interface "+iface+" found.");
+  }
+
+  /**Returns <code>true</code> if this either implements the interface argument or is directly or indirectly a wrapper for an object that does.
+	Returns false otherwise.
+	This implementatoin always returns <code>false</code>.
+	@param iface A class defining an interface.
+	@return <code>true</code> if this implements the interface or directly or indirectly wraps an object that does.
+	@throws SQLException  if an error occurs while determining whether this is a wrapper for an object with the given interface.
+	*/
+	public boolean isWrapperFor(final Class<?> iface) throws SQLException
+	{
+		return false;	//this class is not a wrapper for any other class
+	}
+
 }

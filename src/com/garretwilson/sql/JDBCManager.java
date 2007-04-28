@@ -6,6 +6,7 @@ import java.text.*;
 import java.util.*;
 import javax.naming.NamingException;
 import javax.sql.*;
+
 import static com.garretwilson.lang.SystemUtilities.*;
 import com.garretwilson.util.Debug;
 
@@ -24,7 +25,7 @@ import com.garretwilson.util.Debug;
 </dl>
 @author Garret Wilson
 */
-public class JDBCManager implements JDBCConstants
+public class JDBCManager
 {
 
 	/**The property for the JDBC driver class.*/
