@@ -2,7 +2,7 @@ package com.garretwilson.sql;
 
 import java.sql.*;
 
-import com.garretwilson.lang.StringUtilities;
+import com.garretwilson.lang.Strings;
 import com.garretwilson.util.NameValuePair;
 
 import static com.garretwilson.sql.SQLConstants.*;
@@ -203,7 +203,7 @@ public class SQLUtilities
 	*/
 	public static String createSQLValue(final String value)
 	{
-		return StringUtilities.replace(value, SINGLE_QUOTE, ESCAPED_SINGLE_QUOTE);  //replace all single quotes with double single quotes
+		return Strings.replace(value, SINGLE_QUOTE, ESCAPED_SINGLE_QUOTE);  //replace all single quotes with double single quotes
 	}
 
 	/**Creates an expression matching names and values, combined by the
