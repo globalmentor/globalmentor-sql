@@ -6,7 +6,7 @@ import static java.util.Collections.*;
 
 import javax.sql.*;
 
-import static com.garretwilson.text.CharacterConstants.*;
+import static com.garretwilson.text.Characters.*;
 import com.garretwilson.util.*;
 
 import static com.garretwilson.sql.SQLConstants.*;
