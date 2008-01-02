@@ -7,7 +7,8 @@ import java.util.*;
 import javax.naming.NamingException;
 import javax.sql.*;
 
-import static com.garretwilson.lang.SystemUtilities.*;
+import static com.globalmentor.java.SystemUtilities.*;
+
 import com.garretwilson.util.Debug;
 
 /**A class that facilitates access to JDBC databases.
