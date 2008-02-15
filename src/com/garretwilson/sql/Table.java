@@ -6,11 +6,11 @@ import static java.util.Collections.*;
 
 import javax.sql.*;
 
-import static com.garretwilson.text.Characters.*;
 import com.garretwilson.util.*;
 
 import static com.garretwilson.sql.SQLConstants.*;
 import static com.garretwilson.sql.SQLUtilities.*;
+import static com.globalmentor.java.Characters.*;
 
 /**Facade pattern for accessing a table through SQL and JDBC.
 <p>Classes that extend this class must implement the following methods:</p>
