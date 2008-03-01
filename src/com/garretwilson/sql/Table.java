@@ -6,7 +6,7 @@ import static java.util.Collections.*;
 
 import javax.sql.*;
 
-import com.garretwilson.util.*;
+import com.globalmentor.util.*;
 
 import static com.garretwilson.sql.SQLConstants.*;
 import static com.garretwilson.sql.SQLUtilities.*;

@@ -1,6 +1,6 @@
 package com.garretwilson.sql;
 
-import com.garretwilson.util.*;
+import com.globalmentor.util.*;
 
 import static com.garretwilson.sql.SQLConstants.*;
 

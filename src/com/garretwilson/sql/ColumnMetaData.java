@@ -1,11 +1,11 @@
 package com.garretwilson.sql;
 
-import com.garretwilson.util.DefaultNamedObject;
+import com.globalmentor.util.DefaultComparableNamed;
 
 /**Metadata regarding a column as retrieved from JDBC.
 @author Garret Wilson
 */
-public class ColumnMetaData extends DefaultNamedObject<String>
+public class ColumnMetaData extends DefaultComparableNamed<String>
 {
 	/**The names of the columns of the result set describing each column.*/
 	public enum Columns

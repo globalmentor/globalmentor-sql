@@ -2,8 +2,8 @@ package com.garretwilson.sql;
 
 import java.sql.*;
 
-import com.garretwilson.util.NameValuePair;
 import com.globalmentor.java.Strings;
+import com.globalmentor.util.NameValuePair;
 
 import static com.garretwilson.sql.SQLConstants.*;
 

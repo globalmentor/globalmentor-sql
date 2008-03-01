@@ -9,7 +9,7 @@ import javax.sql.*;
 
 import static com.globalmentor.java.SystemUtilities.*;
 
-import com.garretwilson.util.Debug;
+import com.globalmentor.util.Debug;
 
 /**A class that facilitates access to JDBC databases.
 <p>The database properties expected are the following:</p>

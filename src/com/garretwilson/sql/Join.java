@@ -1,7 +1,8 @@
 package com.garretwilson.sql;
 
 import java.util.*;
-import com.garretwilson.util.*;
+
+import com.globalmentor.util.*;
 
 import static com.garretwilson.sql.SQLConstants.*;
 

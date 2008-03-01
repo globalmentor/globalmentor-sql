@@ -6,7 +6,8 @@ import java.util.*;
 import javax.sql.*;
 
 import static com.garretwilson.sql.JDBCConstants.*;
-import com.garretwilson.util.Debug;
+
+import com.globalmentor.util.Debug;
 
 /**A default implementation of a data source that allows direct connections
 	to the database using the {@link DriverManager}.
