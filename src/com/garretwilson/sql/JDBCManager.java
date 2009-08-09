@@ -7,7 +7,7 @@ import java.util.*;
 import javax.naming.NamingException;
 import javax.sql.*;
 
-import static com.globalmentor.java.SystemUtilities.*;
+import static com.globalmentor.java.OperatingSystem.*;
 
 import com.globalmentor.util.Debug;
 
