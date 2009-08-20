@@ -1,6 +1,6 @@
 package com.garretwilson.sql;
 
-import com.globalmentor.util.DefaultComparableNamed;
+import com.globalmentor.model.DefaultComparableNamed;
 
 /**Metadata regarding a column as retrieved from JDBC.
 @author Garret Wilson

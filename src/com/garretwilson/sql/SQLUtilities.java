@@ -3,7 +3,7 @@ package com.garretwilson.sql;
 import java.sql.*;
 
 import com.globalmentor.java.Strings;
-import com.globalmentor.util.NameValuePair;
+import com.globalmentor.model.NameValuePair;
 
 import static com.garretwilson.sql.SQLConstants.*;
 
