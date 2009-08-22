@@ -9,7 +9,7 @@ import javax.sql.*;
 
 import static com.globalmentor.java.OperatingSystem.*;
 
-import com.globalmentor.util.Debug;
+import com.globalmentor.log.Log;
 
 /**A class that facilitates access to JDBC databases.
 <p>The database properties expected are the following:</p>
@@ -61,12 +61,12 @@ public class JDBCManager
 /*G***fix
 		catch(ClassNotFoundException classNotFoundException)
 		{
-			Debug.error(classNotFoundException);  //G***fix
+			Log.error(classNotFoundException);  //G***fix
 		}
 */
 		catch(Exception exception)
 		{
-			Debug.error(exception);  //G***fix
+			Log.error(exception);  //G***fix
 		}
 	}
 

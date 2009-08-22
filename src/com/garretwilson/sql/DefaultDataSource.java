@@ -7,8 +7,6 @@ import javax.sql.*;
 
 import static com.garretwilson.sql.JDBCConstants.*;
 
-import com.globalmentor.util.Debug;
-
 /**A default implementation of a data source that allows direct connections
 	to the database using the {@link DriverManager}.
 @author Garret Wilson
@@ -106,8 +104,8 @@ public class DefaultDataSource implements DataSource
 	*/
 	public Connection getConnection() throws SQLException
 	{
-//G***del Debug.trace("attempting to get connection to URL: ", getURL()); //G***del
-//G***del Debug.trace("connection properties: ", getProperties()); //G***del
+//G***del Log.trace("attempting to get connection to URL: ", getURL()); //G***del
+//G***del Log.trace("connection properties: ", getProperties()); //G***del
 		return DriverManager.getConnection(getURL(), getProperties());  //get a connection using the given properties
 /*G***del
 		if(getUsername()!=null && getPassword()!=null)  //if a default username and password were supplied

@@ -2,18 +2,17 @@ package com.garretwilson.sql;
 
 import java.sql.*;
 import java.util.*;
-import static java.util.Collections.*;
 
 import javax.sql.*;
 
 import com.globalmentor.collections.ArraySubList;
 import com.globalmentor.collections.SubList;
 import com.globalmentor.model.NameValuePair;
-import com.globalmentor.util.*;
 
 import static com.garretwilson.sql.SQLConstants.*;
 import static com.garretwilson.sql.SQLUtilities.*;
 import static com.globalmentor.java.Characters.*;
+import com.globalmentor.log.Log;
 
 /**Facade pattern for accessing a table through SQL and JDBC.
 <p>Classes that extend this class must implement the following methods:</p>
@@ -169,10 +168,10 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>
 	*/
 	public void synchronize() throws SQLException
 	{
-Debug.trace("synchronizing table", getName());
+Log.trace("synchronizing table", getName());
 		if(exists())	//if the table exists
 		{
-Debug.trace("table exists");
+Log.trace("table exists");
 			final Column<?>[] columns=getColumns();	//get our columns
 			final Map<String, Column<?>> columnMap=new LinkedHashMap<String, Column<?>>(columns.length);	//create a map to hold our column definitions, keyed by name, maintaining the insertion order
 			for(final Column<?> column:columns)	//for each column
@@ -187,12 +186,12 @@ Debug.trace("table exists");
 			final List<ColumnMetaData> columnMetaDataList=getColumnMetadata();	//get metadata describing the underlying table columns
 			for(final ColumnMetaData columnMetaData:columnMetaDataList)	//look at the metadata for each column
 			{
-Debug.trace("looking at column metadata", columnMetaData);	//TODO del
+Log.trace("looking at column metadata", columnMetaData);	//TODO del
 				final String name=columnMetaData.getName();	//get the name of the column
 				final Column<?> column=columnMap.get(name);	//see if we have a definition with this name
 				if(column!=null)	//if we know about this column
 				{
-Debug.trace("we know about this column", columnMetaData);
+Log.trace("we know about this column", columnMetaData);
 					//TODO make sure the definition is the same
 					columnMap.remove(name);	//remove the column definition; we've already checked it
 				}
@@ -203,7 +202,7 @@ Debug.trace("we know about this column", columnMetaData);
 			}
 			for(final Column<?> column:columnMap.values())	//look at the remaining columns TODO important check the order; the mapped order could be anything
 			{
-Debug.trace("we need to add column", column);
+Log.trace("we need to add column", column);
 				addColumn(column);	//add this column
 			}
 		}
@@ -734,7 +733,7 @@ Debug.trace("we need to add column", column);
 				  statementStringBuffer.append(' ').append(ORDER_BY).append(' ').append(createList(orderBy)); //append " ORDER BY orderBy"
 				}
 //G***del Debug.setDebug(true);
-//G***del Debug.trace("ready to execute SQL statement: ", statementStringBuffer);	//G***del
+//G***del Log.trace("ready to execute SQL statement: ", statementStringBuffer);	//G***del
 				final ResultSet resultSet=statement.executeQuery(statementStringBuffer.toString()); //select the records
 				try
 				{
