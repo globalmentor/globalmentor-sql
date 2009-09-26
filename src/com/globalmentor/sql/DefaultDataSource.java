@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package com.garretwilson.sql;
+package com.globalmentor.sql;
 
 import java.io.PrintWriter;
 import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 
-import static com.garretwilson.sql.JDBC.*;
+import static com.globalmentor.sql.JDBC.*;
 
 /**A default implementation of a data source that allows direct connections
 	to the database using the {@link DriverManager}.

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.garretwilson.sql;
+package com.globalmentor.sql;
 
 import java.sql.*;
 import java.util.*;
@@ -25,8 +25,9 @@ import com.globalmentor.collections.ArraySubList;
 import com.globalmentor.collections.SubList;
 import com.globalmentor.model.NameValuePair;
 
-import static com.garretwilson.sql.SQL.*;
 import static com.globalmentor.java.Characters.*;
+import static com.globalmentor.sql.SQL.*;
+
 import com.globalmentor.log.Log;
 
 /**Facade pattern for accessing a table through SQL and JDBC.

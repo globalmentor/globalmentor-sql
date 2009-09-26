@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.garretwilson.sql;
+package com.globalmentor.sql;
 
 import com.globalmentor.model.NameValuePair;
 
-import static com.garretwilson.sql.SQL.*;
+import static com.globalmentor.sql.SQL.*;
 
 /**Encapsulates an SQL expression for WHERE.
 @author Garret Wilson

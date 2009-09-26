@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.garretwilson.sql;
+package com.globalmentor.sql;
 
 import java.io.File;
 import java.sql.*;

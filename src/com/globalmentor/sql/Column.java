@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package com.garretwilson.sql;
+package com.globalmentor.sql;
 
 import com.globalmentor.model.NameValuePair;
 
-import static com.garretwilson.sql.SQL.*;
+import static com.globalmentor.sql.SQL.*;
 
 /**A class encapsulating the definition of a database column.
 @author Garret Wilson
