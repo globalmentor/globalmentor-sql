@@ -1,3 +1,19 @@
+/*
+ * Copyright © 1996-2009 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.garretwilson.sql;
 
 import java.io.File;
@@ -14,10 +30,10 @@ import com.globalmentor.log.Log;
 /**A class that facilitates access to JDBC databases.
 <p>The database properties expected are the following:</p>
 <dl>
-	<dt>driver</dt> <dd>The class name of the database driver.</dd>
-	<dt>user</dt> <dd>The user name for connecting to the database.</dd>
-	<dt>password</dt> <dd>The user password for connecting to the database.</dd>
-	<dt>url</dt> <dd>The URL for connecting to the database.</dd>
+	<dt><code>driver</code></dt> <dd>The class name of the database driver.</dd>
+	<dt><code>user</code></dt> <dd>The user name for connecting to the database.</dd>
+	<dt><code>password</code></dt> <dd>The user password for connecting to the database.</dd>
+	<dt><code>url</code></dt> <dd>The URL for connecting to the database.</dd>
 </dl>
 <p>The URL accepts the following replacement parameters:</p>
 <dl>
@@ -38,10 +54,6 @@ public class JDBCManager
 	final static String DEFAULT_DRIVER="org.hsqldb.jdbcDriver";
 	/**The default URL of the database.*/
 	final static String DEFAULT_URL="jdbc:hsqldb:defaultdb";
-	/**The database username.*/
-//G***del	public final static String DATABASE_USERNAME="sa";
-	/**The database password.*/
-//G***del	public final static String DATABASE_PASSWORD="";
 
 	/**The directory specified for storing the database, if needed.*/
 	private final File databaseDirectory;
@@ -58,15 +70,15 @@ public class JDBCManager
 		{
 		  Class.forName(driverClassName); //register the driver class
 		}
-/*G***fix
+/*TODO fix
 		catch(ClassNotFoundException classNotFoundException)
 		{
-			Log.error(classNotFoundException);  //G***fix
+			Log.error(classNotFoundException);  //TODO fix
 		}
 */
 		catch(Exception exception)
 		{
-			Log.error(exception);  //G***fix
+			Log.error(exception);  //TODO fix
 		}
 	}
 
@@ -114,18 +126,18 @@ public class JDBCManager
 	*/
 	public DataSource getDataSource() throws NamingException, SQLException
 	{
-/*G***first try to lookup via JNDI from a properties file some data source
-//G***del		Debug.notify("Getting connection"); //G***del
-//G***del when works		return DriverManager.getConnection(DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD);	//get a connection and return it
+/*TODO first try to lookup via JNDI from a properties file some data source
+//TODO del		Debug.notify("Getting connection"); //TODO del
+//TODO del when works		return DriverManager.getConnection(DATABASE_URL, DATABASE_USERNAME, DATABASE_PASSWORD);	//get a connection and return it
 		final InitialContext context=new InitialContext();  //obtain an initial context
-		final DataSource dataSource=(DataSource)context.lookup("jdbc/HypersonicCoreDS");  //G***testing
+		final DataSource dataSource=(DataSource)context.lookup("jdbc/HypersonicCoreDS");  //TODO testing
 */
 		  //get the database driver
 		final String driver=properties.getProperty(DRIVER_PROPERTY, DEFAULT_DRIVER);
 		registerDriver(driver); //make sure the database driver is registered
 		  //get the database URL and replace {0} with the database directory
 		final String url=MessageFormat.format(properties.getProperty(URL_PROPERTY, DEFAULT_URL), new Object[]{getDatabaseDirectory().toString()});
-//G***del Debug.notify(url);  //G***del
+//TODO del Debug.notify(url);  //TODO del
 		return new DefaultDataSource(url, properties);  //create a default data source using the database URL and given properties
 	}
 

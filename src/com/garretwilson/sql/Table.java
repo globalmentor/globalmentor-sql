@@ -1,3 +1,19 @@
+/*
+ * Copyright © 1996-2009 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.garretwilson.sql;
 
 import java.sql.*;
@@ -9,17 +25,16 @@ import com.globalmentor.collections.ArraySubList;
 import com.globalmentor.collections.SubList;
 import com.globalmentor.model.NameValuePair;
 
-import static com.garretwilson.sql.SQLConstants.*;
-import static com.garretwilson.sql.SQLUtilities.*;
+import static com.garretwilson.sql.SQL.*;
 import static com.globalmentor.java.Characters.*;
 import com.globalmentor.log.Log;
 
 /**Facade pattern for accessing a table through SQL and JDBC.
 <p>Classes that extend this class must implement the following methods:</p>
 <ul>
-  <li><code>public void insert(<var>T</var>)</code></li>
-	<li><code>protected <var>T</var> retrieve(ResultSet)</code></li>
-  <li><code>public void update(<var>T</var>, final String... primaryKeyValue)</code></li>
+  <li>{@link #insert(Object)}</li>
+	<li>{@link #retrieve(ResultSet)}</li>
+  <li>{@link #update(NameValuePair[], NameValuePair...)}</li>
 </ul>
 <p>This class has the capability of caching database record count, but defaults
 	to a cache that is always expired.</p>
@@ -58,7 +73,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>
 		/**Sets the primary key column.
 		@param primaryKey The primary key column.
 		*/
-//G***del		protected void setPrimaryKey(final Column primaryKey) {this.primaryKey=primaryKey;}
+//TODO del		protected void setPrimaryKey(final Column primaryKey) {this.primaryKey=primaryKey;}
 
 	/**The default ordering column(s).*/
 	private Column<?>[] defaultOrderBy=new Column[]{};
@@ -84,7 +99,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>
 		final List<Column<?>> primaryKeyList=new ArrayList<Column<?>>(columns.length);	//create a list for colecting primary keys
 		for(final Column<?> column:columns)	//look at each columns
 		{
-//G***del			column.setTable(this);	//associate the column with this table
+//TODO del			column.setTable(this);	//associate the column with this table
 			if(column.isPrimaryKey())	//if this columns is a primary key
 			{
 				primaryKeyList.add(column);	//add this column to our list of primary keys
@@ -272,7 +287,7 @@ Log.trace("we need to add column", column);
 				{
 					drop(true);	//remove the table if it exists
 				}
-				SQLUtilities.createTable(statement, getName(), getSQLDefinition());	//create the table
+				createTable(statement, getName(), getSQLDefinition());	//create the table
 				invalidateCachedRecordCount();	//any cached record count is no longer valid
 			}
 			finally
@@ -310,7 +325,7 @@ Log.trace("we need to add column", column);
 	*/
 	public void delete(final NameValuePair<Column<?>, ?>... columnValues) throws SQLException
 	{
-		delete(SQLUtilities.createExpression(Conjunction.AND, createNamesValues(columnValues)));  //delete the records which have the correct value for this columm
+		delete(createExpression(Conjunction.AND, createNamesValues(columnValues)));  //delete the records which have the correct value for this columm
 	}
 
 	/**Deletes one or more rows from the table that fit the given criteria.
@@ -326,7 +341,7 @@ Log.trace("we need to add column", column);
 			final Statement statement=connection.createStatement(); //create a statement
 			try
 			{
-				SQLUtilities.delete(statement, getName(), expression);	//delete the records
+				SQL.delete(statement, getName(), expression);	//delete the records
 				invalidateCachedRecordCount();	//any cached record count is no longer valid
 			}
 			finally
@@ -346,7 +361,7 @@ Log.trace("we need to add column", column);
 	@param columnValue The column value necessary for a record to be included.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-/*G***del
+/*TODO del
 	public void deleteColumn(final String columnName, final String columnValue) throws SQLException
 	{
 		delete(columnName+EQUALS+SINGLE_QUOTE+columnValue+SINGLE_QUOTE);  //delete the records which have the correct value for this column
@@ -374,7 +389,7 @@ Log.trace("we need to add column", column);
 			final Statement statement=connection.createStatement(); //create a statement
 			try
 			{
-				SQLUtilities.dropTable(statement, getName(), ifExists);	//remove the table if it exists
+				dropTable(statement, getName(), ifExists);	//remove the table if it exists
 				invalidateCachedRecordCount();	//any cached record count is no longer valid
 			}
 			finally
@@ -449,7 +464,7 @@ Log.trace("we need to add column", column);
 					final ResultSet resultSet=statement.executeQuery(statementStringBuffer.toString()); //select all the records
 					try
 					{
-						resultSet.last();  //move to after the last row G***make this a comvenience method that knows how to iterate the table of ResultSet.last() isn't supported
+						resultSet.last();  //move to after the last row TODO make this a comvenience method that knows how to iterate the table of ResultSet.last() isn't supported
 						final int recordCount=resultSet.getRow();  //get the row number, which will be the number of rows in the table
 						setCachedRecordCount(recordCount);	//update the cached record count
 						return recordCount;	//return the record count
@@ -490,7 +505,7 @@ Log.trace("we need to add column", column);
 			final Statement statement=connection.createStatement(); //create a statement
 			try
 			{
-				SQLUtilities.insertValues(statement, getName(), values);	//insert the values into the table
+				insertValues(statement, getName(), values);	//insert the values into the table
 				invalidateCachedRecordCount();	//any cached record count is no longer valid
 			}
 			finally
@@ -572,7 +587,7 @@ Log.trace("we need to add column", column);
 	*/
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final NameValuePair<Column<?>, ?>... columnValues) throws SQLException
 	{
-		return select(factory, SQLUtilities.createExpression(Conjunction.AND, createNamesValues(columnValues)));	//select the records which have the correct values for the column
+		return select(factory, createExpression(Conjunction.AND, createNamesValues(columnValues)));	//select the records which have the correct values for the column
 	}
 
 	/**Selects all the records from the table using the given criteria with the
@@ -686,7 +701,7 @@ Log.trace("we need to add column", column);
 	*/
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
-		return select(factory, selectExpression, null, whereExpression, startIndex, count, orderBy);	//G***testing
+		return select(factory, selectExpression, null, whereExpression, startIndex, count, orderBy);	//TODO testing
 	}
 
 	/**Selects records from the table using the given criteria.
@@ -709,7 +724,7 @@ Log.trace("we need to add column", column);
 		{
 				//create a statement that can quickly scroll to the end
 			final Statement statement=connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-//G***del			final Statement statement=connection.createStatement(); //create a statement
+//TODO del			final Statement statement=connection.createStatement(); //create a statement
 			try
 			{
 					//create a statement for selecting the records: "SELECT * FROM table WHERE expression"
@@ -732,8 +747,8 @@ Log.trace("we need to add column", column);
 				{
 				  statementStringBuffer.append(' ').append(ORDER_BY).append(' ').append(createList(orderBy)); //append " ORDER BY orderBy"
 				}
-//G***del Debug.setDebug(true);
-//G***del Log.trace("ready to execute SQL statement: ", statementStringBuffer);	//G***del
+//TODO del Debug.setDebug(true);
+//TODO del Log.trace("ready to execute SQL statement: ", statementStringBuffer);	//TODO del
 				final ResultSet resultSet=statement.executeQuery(statementStringBuffer.toString()); //select the records
 				try
 				{
@@ -743,7 +758,7 @@ Log.trace("we need to add column", column);
 					final int endRow=count<Integer.MAX_VALUE ? startRow+count : Integer.MAX_VALUE; //we'll end when we get past the requested count (allowing for a requested maximum amount)
 				  int row=startRow; //we'll start at the starting row
 					boolean onResultSet=resultSet.absolute(startRow); //go to the starting row
-//G***del when works					if(!resultSet.isBeforeFirst() && !resultSet.isAfterLast())  //if there are rows, and we haven't gone past all the rows
+//TODO del when works					if(!resultSet.isBeforeFirst() && !resultSet.isAfterLast())  //if there are rows, and we haven't gone past all the rows
 					while(onResultSet && row<endRow)  //while we're still on the result set and w're not past the ending row
 					{
 						list.add(factory.retrieve(resultSet)); //retrieve the object from the row and add it to our list
@@ -806,7 +821,7 @@ Log.trace("we need to add column", column);
 	@return A list of objects representing all records in the table.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-/**G***del; no longer needed with varargs
+/**TODO del; no longer needed with varargs
 	public SubList<T> selectAll() throws SQLException
 	{
 		return selectAll(null);  //select all records using the default ordering
@@ -853,7 +868,7 @@ Log.trace("we need to add column", column);
 	@return A list of objects representing matched records.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-/*G***del if no longer needed
+/*TODO del if no longer needed
 	public SubList<T> selectColumn(final String columnName, final String columnValue) throws SQLException
 	{
 		return select(columnName+EQUALS+SINGLE_QUOTE+columnValue+SINGLE_QUOTE);  //select the records which have the correct value for this column
@@ -868,7 +883,7 @@ Log.trace("we need to add column", column);
 		if no record matches.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-/*G***del if no longer needed
+/*TODO del if no longer needed
 	public T selectColumnRecord(final String columnName, final String columnValue) throws SQLException
 	{
 		final SubList<T> recordList=selectColumn(columnName, columnValue); //get all the matching records
@@ -906,7 +921,7 @@ Log.trace("we need to add column", column);
 		primary key columns.
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-//G***del if not needed	public abstract void update(final T object, final Object... primaryKeyValues) throws SQLException;
+//TODO del if not needed	public abstract void update(final T object, final Object... primaryKeyValues) throws SQLException;
 
 	/**Updates records by primary key columns.
 	@param updateColumnValues The array of column/value pair arrays to update.
@@ -940,7 +955,7 @@ Log.trace("we need to add column", column);
 			try
 			{
 				  //update the values for the row with the primary key value
-				SQLUtilities.updateTable(statement, getName(), createNamesValues(updateColumnValues), SQLUtilities.createExpression(Conjunction.AND, createNamesValues(whereColumnValues)));
+				updateTable(statement, getName(), createNamesValues(updateColumnValues), createExpression(Conjunction.AND, createNamesValues(whereColumnValues)));
 			}
 			finally
 			{
@@ -1053,7 +1068,7 @@ Log.trace("we need to add column", column);
 		{
 			columnNames[i]=columns[i].getName();	//store this column name
 		}
-		return SQLUtilities.createList(columnNames);	//create an SQL list from the column names
+		return SQL.createList(columnNames);	//create an SQL list from the column names
 	}
 
 }

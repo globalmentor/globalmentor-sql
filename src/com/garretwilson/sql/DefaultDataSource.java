@@ -1,3 +1,19 @@
+/*
+ * Copyright © 1996-2009 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.garretwilson.sql;
 
 import java.io.PrintWriter;
@@ -5,7 +21,7 @@ import java.sql.*;
 import java.util.*;
 import javax.sql.*;
 
-import static com.garretwilson.sql.JDBCConstants.*;
+import static com.garretwilson.sql.JDBC.*;
 
 /**A default implementation of a data source that allows direct connections
 	to the database using the {@link DriverManager}.
@@ -21,18 +37,6 @@ public class DefaultDataSource implements DataSource
 		/**@return The URL identifying the database.*/
 		public String getURL() {return url;}
 
-	/**The database user on whose behalf connections are made.*/
-//G***del	private final String username;
-
-		/**@return The database user on whose behalf connections are made.*/
-//G***del		protected String getUsername() {return username;}
-
-	/**The user's password.*/
-//G***del	private final String password;
-
-		/**@return The user's password.*/
-//G***del		protected String getPassword() {return password;}
-
 	/**Properties such as <code>user</code> and <code>password</code> for the
 		database connection.
 	*/
@@ -42,12 +46,6 @@ public class DefaultDataSource implements DataSource
 			for the database connection.
 		*/
 		protected Properties getProperties() {return properties;}
-
-	/**The log writer for this data source, initially <code>nul</code>.*/
-//G***del	protected LogWriter logWriter=null;
-
-	/**The login timeout, initially zero.*/
-//G***del	protected int loginTimeout=0;
 
 	/**Constructor that specifies no username and password.
 	@param databaseURL A database url of the form
@@ -73,10 +71,6 @@ public class DefaultDataSource implements DataSource
 			properties.setProperty(USER_PROPERTY, defaultUsername); //save the username in the properties
 		if(defaultPassword!=null) //if a password is specified
 			properties.setProperty(PASSWORD_PROPERTY, defaultPassword); //save the password in the properties
-/*G***Del
-		username=defaultUsername; //save the username
-		password=defaultPassword; //save the password
-*/
 	}
 
 	/**Properties constructor. The properties must contain values for at least
@@ -90,10 +84,6 @@ public class DefaultDataSource implements DataSource
 	{
 		url=databaseURL;  //save the URL to the database
 		this.properties=properties; //store the properties
-/*G***del
-		username=defaultUsername; //save the username
-		password=defaultPassword; //save the password
-*/
 	}
 
 	/**Attempts to establish a database connection using the default username and
@@ -104,15 +94,7 @@ public class DefaultDataSource implements DataSource
 	*/
 	public Connection getConnection() throws SQLException
 	{
-//G***del Log.trace("attempting to get connection to URL: ", getURL()); //G***del
-//G***del Log.trace("connection properties: ", getProperties()); //G***del
 		return DriverManager.getConnection(getURL(), getProperties());  //get a connection using the given properties
-/*G***del
-		if(getUsername()!=null && getPassword()!=null)  //if a default username and password were supplied
-		  return getConnection(getUsername(), getPassword());    //get a connection using the default username and password
-		else  //if we have no default username and password
-			return DriverManager.getConnection(getURL());  //get the default connection
-*/
 	}
 
 	/**Attempts to establish a database connection using the given username and
@@ -137,7 +119,6 @@ public class DefaultDataSource implements DataSource
 	public PrintWriter getLogWriter() throws SQLException
 	{
 		return DriverManager.getLogWriter();  //get the driver manager's log writer
-//G***del		return logWriter; //return the log writer
 	}
 
 	/**Retrieves the global <code>DriverManager</code> login timeout value as
@@ -150,7 +131,6 @@ public class DefaultDataSource implements DataSource
   public int getLoginTimeout() throws SQLException
 	{
 		return DriverManager.getLoginTimeout(); //return the driver manager's login timeout
-//G***del		return loginTimeout;  //return the login timeout
 	}
 
 	/**Sets the log writer for this data source. This version update the global
@@ -161,7 +141,6 @@ public class DefaultDataSource implements DataSource
 	*/
 	public void setLogWriter(final PrintWriter out) throws SQLException
 	{
-//G***del		logWriter=out;  //update the log writer G***fix to actually update something meaningful
 		DriverManager.setLogWriter(out);  //update the log writer
 	}
 
@@ -174,7 +153,6 @@ public class DefaultDataSource implements DataSource
 	*/
   public void setLoginTimeout(final int seconds) throws SQLException
 	{
-//G***del		loginTimeout=seconds; //set the login timeout
 		DriverManager.setLoginTimeout(seconds); //update the login timeout
 	}
 

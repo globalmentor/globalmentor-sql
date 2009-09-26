@@ -1,4 +1,22 @@
+/*
+ * Copyright © 1996-2009 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.garretwilson.sql;
+
+import java.sql.Types;
 
 import com.globalmentor.model.DefaultComparableNamed;
 
@@ -18,7 +36,7 @@ public class ColumnMetaData extends DefaultComparableNamed<String>
 		TABLE_NAME,
 		/**Column name (String).*/
 		COLUMN_NAME,
-		/**SQL type from <code>java.sql.Types</code> (int).*/
+		/**SQL type from {@link Types} (int).*/
 		DATA_TYPE,
 		/**Data source dependent type name (String); for a UDT the type name is fully qualified.*/
 		TYPE_NAME,
@@ -58,7 +76,7 @@ public class ColumnMetaData extends DefaultComparableNamed<String>
 		SCOPE_SCHEMA,
 		/**Table name that this the scope of a reference attribure (String); <code>null</code> if the DATA_TYPE isn't REF.*/
 		SCOPE_TABLE,
-		/**Source type of a distinct type or user-generated Ref type, SQL type from <code>java.sql.Types</code> (short); <code>null</code> if DATA_TYPE isn't DISTINCT or user-generated REF.*/
+		/**Source type of a distinct type or user-generated Ref type, SQL type from {@link Types} (short); <code>null</code> if DATA_TYPE isn't DISTINCT or user-generated REF.*/
 		SOURCE_DATA_TYPE
 	}
 

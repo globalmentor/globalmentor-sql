@@ -1,8 +1,24 @@
+/*
+ * Copyright © 1996-2009 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.garretwilson.sql;
 
 import com.globalmentor.model.NameValuePair;
 
-import static com.garretwilson.sql.SQLConstants.*;
+import static com.garretwilson.sql.SQL.*;
 
 /**A class encapsulating the definition of a database column.
 @author Garret Wilson
@@ -10,19 +26,6 @@ import static com.garretwilson.sql.SQLConstants.*;
 */
 public class Column<T> extends NameValuePair<String, String>
 {
-
-	/**The table with which this column has been associated.*/
-//G***del	private Table table=null;
-
-		/**Associates a table with a column.
-		@param table The table with which this column is being associated.
-		*/
-//G***del		void setTable(final Table table) {this.table=table;}
-
-		/**@return The table with which this column has been associated, or
-			<code>null</code> if this column has not been associated with a table.
-		*/
-//G***del		public Table getTable() {return table;}
 
 	/**The name of the table with which this column is associated.*/
 	private final String tableName;
@@ -98,10 +101,7 @@ public class Column<T> extends NameValuePair<String, String>
 	public String toString()
 	{
 		final StringBuilder stringBuilder=new StringBuilder();
-//G***del if not needed		if(getTable()!=null)	//if this column is associated with a table
-		{
-			stringBuilder.append(tableName).append(TABLE_COLUMN_SEPARATOR);	//tableName.
-		}
+		stringBuilder.append(tableName).append(TABLE_COLUMN_SEPARATOR);	//tableName.
 		stringBuilder.append(getName());	//columnName
 		return stringBuilder.toString();	//return the representation of the column
 	}

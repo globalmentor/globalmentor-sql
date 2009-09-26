@@ -1,3 +1,19 @@
+/*
+ * Copyright © 1996-2009 GlobalMentor, Inc. <http://www.globalmentor.com/>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.garretwilson.sql;
 
 import java.sql.*;
@@ -5,14 +21,83 @@ import java.sql.*;
 import com.globalmentor.java.Strings;
 import com.globalmentor.model.NameValuePair;
 
-import static com.garretwilson.sql.SQLConstants.*;
-
 /**Class that knows how to manipulate SQL statements.
 @author Garret Wilson
-@see SQLConstants
 */
-public class SQLUtilities
+public class SQL
 {
+
+	/**Conjunctions used in SQL expressions.*/
+	public enum Conjunction{AND, OR};
+
+	/**The character that quotes strings in SQL values.*/
+	public final static char SINGLE_QUOTE='\'';
+	/**The escaped form of a single quote.*/
+	public final static String ESCAPED_SINGLE_QUOTE="''";
+	/**The SQL equals character.*/
+	public final static char EQUALS='=';
+	/**The SQL list separator character.*/
+	public final static char LIST_SEPARATOR=',';
+	/**The SQL table.column separator character.*/
+	public final static char TABLE_COLUMN_SEPARATOR='.';
+
+	/**The SQL wildcard ('*') character.*/
+	public final static char WILDCARD_CHAR='*';
+
+	/**The SQL ADD command.*/
+	public final static String ADD="ADD";
+	/**The SQL ALTER command.*/
+	public final static String ALTER="ALTER";
+	/**The SQL AND keyword.*/
+//TODO del when works	public final static String AND="AND";
+	/**The SQL BY keyword.*/
+	public final static String BY="BY";
+	/**The SQL CREATE command.*/
+	public final static String CREATE="CREATE";
+	/**The SQL DEFAULT keyword.*/
+	public final static String DEFAULT="DEFAULT";
+	/**The SQL DELETE command.*/
+	public final static String DELETE="DELETE";
+	/**The SQL DROP command.*/
+	public final static String DROP="DROP";
+	/**The SQL EXISTS keyword.*/
+	public final static String EXISTS="EXISTS";
+	/**The SQL FROM keyword.*/
+	public final static String FROM="FROM";
+	/**The SQL IF keyword.*/
+	public final static String IF="IF";
+	/**The SQL KEY keyword.*/
+	public final static String KEY="KEY";
+	/**The SQL INSERT command.*/
+	public final static String INSERT="INSERT";
+	/**The SQL INTO keyword.*/
+	public final static String INTO="INTO";
+	/**The SQL JOIN command.*/
+	public final static String JOIN="JOIN";
+	/**The SQL NULL keyword.*/
+	public final static String NULL="NULL";
+	/**The SQL ON keyword.*/
+	public final static String ON="ON";
+	/**The SQL ORDER keyword.*/
+	public final static String ORDER="ORDER";
+	/**The SQL ORDER BY phrase.*/
+	public final static String ORDER_BY=ORDER+' '+BY;
+	/**The SQL PRIMARY keyword.*/
+	public final static String PRIMARY="PRIMARY";
+	/**The SQL PRIMARY KEY phrase.*/
+	public final static String PRIMARY_KEY=PRIMARY+' '+KEY;
+	/**The SQL SELECT command.*/
+	public final static String SELECT="SELECT";
+	/**The SQL SET command.*/
+	public final static String SET="SET";
+	/**The SQL TABLE keyword.*/
+	public final static String TABLE="TABLE";
+	/**The SQL UPDATE command.*/
+	public final static String UPDATE="UPDATE";
+	/**The SQL VALUES keyword.*/
+	public final static String VALUES="VALUES";
+	/**The SQL WHERE keyword.*/
+	public final static String WHERE="WHERE";
 
 	/**Creates a table using SQL commands.
 	@param statement The SQL statement.
@@ -91,7 +176,7 @@ public class SQLUtilities
 	@param values The values to go inside SQL INSERT INTO XXX VALUES (values).
 	@exception SQLException Thrown if there is an error processing the statement.
 	*/
-	public static void insertValues(final Statement statement, final String name, final Object... values) throws SQLException  //G***fix to work with integer values
+	public static void insertValues(final Statement statement, final String name, final Object... values) throws SQLException  //TODO fix to work with integer values
 	{
 		final StringBuffer valueStringBuffer=new StringBuffer();  //we'll store the values in this string
 		for(int i=0; i<values.length; ++i)	//look at each of the values
@@ -189,7 +274,7 @@ public class SQLUtilities
 		updateTable(statement, name, valueStringBuffer.toString(), predicate);  //update the table with our constructed value string
 	}
 
-	/*G***fix Creates an expression in the form
+	/*TODO fix Creates an expression in the form
 	public static createEqualsExpression(final String columnName, final String Expression)
 	{
 
@@ -199,7 +284,7 @@ public class SQLUtilities
 	/**Creates a value that is compatible with SQL by replacing all single quotes
 		(') with double single quotes ('').
 	@param value The value to encode.
-	@return The value encoded for SQL.
+	@return The value encoded for 
 	*/
 	public static String createSQLValue(final String value)
 	{
@@ -248,4 +333,5 @@ public class SQLUtilities
 		}
 		return list.toString();  //return the string form of the list we built
 	}
+
 }
