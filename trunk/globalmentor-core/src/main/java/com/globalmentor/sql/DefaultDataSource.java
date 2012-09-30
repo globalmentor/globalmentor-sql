@@ -19,6 +19,8 @@ package com.globalmentor.sql;
 import java.io.PrintWriter;
 import java.sql.*;
 import java.util.*;
+import java.util.logging.Logger;
+
 import javax.sql.*;
 
 import static com.globalmentor.sql.JDBC.*;
@@ -179,4 +181,11 @@ public class DefaultDataSource implements DataSource
 		return false;	//this class is not a wrapper for any other class
 	}
 
+	/**New JDK 7 requirement.
+	 * This implementation throws {@link SQLFeatureNotSupportedException}.
+	 */
+	public Logger getParentLogger() throws SQLFeatureNotSupportedException
+	{
+		throw new SQLFeatureNotSupportedException();
+	}	
 }
