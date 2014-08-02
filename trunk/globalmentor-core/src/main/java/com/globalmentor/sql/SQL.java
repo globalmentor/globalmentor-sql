@@ -104,7 +104,7 @@ public class SQL
 	@param name The name of the table to be created.
 	@param definition The definition string of the table, appropriate for
 		SQL CREATE TABLE XXX (definition).
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void createTable(final Statement statement, final String name, final String definition) throws SQLException
 	{
@@ -115,7 +115,7 @@ public class SQL
 	@param statement The SQL statement.
 	@param name The name of the table from which rows will be removed.
 	@param expression The expression describing the rows to be removed.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void delete(final Statement statement, final String name, final String expression) throws SQLException
 	{
@@ -125,7 +125,7 @@ public class SQL
 	/**Drops (removes) a table using SQL commands if it exists.
 	@param statement The SQL statement.
 	@param name The name of the table to be dropped.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void dropTable(final Statement statement, final String name) throws SQLException
 	{
@@ -136,7 +136,7 @@ public class SQL
 	@param statement The SQL statement.
 	@param name The name of the table to be dropped.
 	@param ifExists <code>true</code> if the "IF EXISTS" condition should be added.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void dropTable(final Statement statement, final String name, final boolean ifExists) throws SQLException
 	{
@@ -152,7 +152,7 @@ public class SQL
 	@param tableName The name of the table to which a column should be added.
 	@param columnName The name of the column to add.
 	@param columnDefinition The definition string of the column.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void alterTableAddColumn(final Statement statement, final String tableName, final String columnName, final String columnDefinition) throws SQLException
 	{
@@ -163,7 +163,7 @@ public class SQL
 	@param statement The SQL statement.
 	@param name The name of the table into which data will be inserted.
 	@param valueString The string of comma-separated values to go inside SQL INSERT INTO XXX VALUES (values).
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void insertValues(final Statement statement, final String name, final String valueString) throws SQLException
 	{
@@ -174,7 +174,7 @@ public class SQL
 	@param statement The SQL statement.
 	@param name The name of the table into which data will be inserted.
 	@param values The values to go inside SQL INSERT INTO XXX VALUES (values).
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void insertValues(final Statement statement, final String name, final Object... values) throws SQLException  //TODO fix to work with integer values
 	{
@@ -204,7 +204,7 @@ public class SQL
 	@param statement The SQL statement.
 	@param name The name of the table to update.
 	@param valueString The string of comma-separated values to go inside SQL UPDATE XXX SET valueString.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void updateTable(final Statement statement, final String name, final String valueString) throws SQLException
 	{
@@ -217,7 +217,7 @@ public class SQL
 	@param valueString The string of comma-separated values to go inside SQL UPDATE XXX SET valueString.
 	@param predicate The condition on which to make the changes, or
 		<code>null</code> if all rows should be updated.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void updateTable(final Statement statement, final String name, final String valueString, final String predicate) throws SQLException
 	{
@@ -233,7 +233,7 @@ public class SQL
 	@param statement The SQL statement.
 	@param name The name of the table to update.
 	@param namesValues The array of name/value pair arrays to update.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void updateTable(final Statement statement, final String name, final NameValuePair<String, String>[] namesValues) throws SQLException
 	{
@@ -246,7 +246,7 @@ public class SQL
 	@param namesValues The array of column/value pair arrays to update.
 	@param predicate The condition on which to make the changes, or
 		<code>null</code> if all rows should be updated.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public static void updateTable(final Statement statement, final String name, final NameValuePair<String, String>[] namesValues, final String predicate) throws SQLException
 	{

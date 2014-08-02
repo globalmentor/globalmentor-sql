@@ -92,7 +92,7 @@ public class DefaultDataSource implements DataSource
 		password, if they were specified when this class was created, or with
 		no username and password if they were not specified.
 	@return The new database connection.
-	@exception SQLException Thrown if a database error occurs.
+	@throws SQLException Thrown if a database error occurs.
 	*/
 	public Connection getConnection() throws SQLException
 	{
@@ -104,7 +104,7 @@ public class DefaultDataSource implements DataSource
 	@param username The database user on whose behalf connections are made.
 	@param password The user's password.
 	@return The new database connection.
-	@exception SQLException Thrown if a database error occurs.
+	@throws SQLException Thrown if a database error occurs.
 	*/
 	public Connection getConnection(final String username, final String password) throws SQLException
 	{
@@ -115,7 +115,7 @@ public class DefaultDataSource implements DataSource
 		current log writer.
 	@return The log writer for this data source, or <code>null</code> if no
 		log writer has been set.
-	@exception SQLException Thrown if a database error occurs.
+	@throws SQLException Thrown if a database error occurs.
 	@see DriverManager#getLogWriter
 	*/
 	public PrintWriter getLogWriter() throws SQLException
@@ -127,7 +127,7 @@ public class DefaultDataSource implements DataSource
 		the current login timeout.
 	@return The current login timeout, or zero if the system default should
 		be used, if there is one.
-	@exception SQLException Thrown if a database error occurs.
+	@throws SQLException Thrown if a database error occurs.
 	@see DriverManager#getLoginTimeout
 	*/
   public int getLoginTimeout() throws SQLException
@@ -138,7 +138,7 @@ public class DefaultDataSource implements DataSource
 	/**Sets the log writer for this data source. This version update the global
 		<code>DriverManager</code> log writer.
 	@param out The new log writer.
-	@exception SQLException Thrown if a database error occurs.
+	@throws SQLException Thrown if a database error occurs.
 	@see DriverManager#setLogWriter
 	*/
 	public void setLogWriter(final PrintWriter out) throws SQLException
@@ -150,7 +150,7 @@ public class DefaultDataSource implements DataSource
 		attempting to connect to a database. This version updates the global
 		<code>DriverManager</code> login timeout.
 	@param seconds The new login timeout.
-	@exception SQLException Thrown if a database error occurs.
+	@throws SQLException Thrown if a database error occurs.
 	@see DriverManager#setLoginTimeout
 	*/
   public void setLoginTimeout(final int seconds) throws SQLException

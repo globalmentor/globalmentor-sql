@@ -121,8 +121,8 @@ public class JDBCManager
 	}
 
 	/**@return A new data source to serve as a connection factory to the database.
-	@exception NamingException Thrown if there is an error retrieving the data source.
-	@exception SQLException Thrown if there is an error accessing the database.
+	@throws NamingException Thrown if there is an error retrieving the data source.
+	@throws SQLException Thrown if there is an error accessing the database.
 	*/
 	public DataSource getDataSource() throws NamingException, SQLException
 	{

@@ -180,7 +180,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T>
 	
 	/**Synchronizes the underlying table with this object's table definition by creating the table if needed
 	 	and then adding or removing underlying table columns as needed.
-	@exception SQLException Thrown if there is an error accessing the database.
+	@throws SQLException Thrown if there is an error accessing the database.
 	*/
 	public void synchronize() throws SQLException
 	{
@@ -229,7 +229,7 @@ Log.trace("we need to add column", column);
 	}
 
 	/**Retrieves metadata describing the underlying table columns.
-	@exception SQLException Thrown if there is an error accessing the database.
+	@throws SQLException Thrown if there is an error accessing the database.
 	*/
 	public List<ColumnMetaData> getColumnMetadata() throws SQLException
 	{
@@ -265,7 +265,7 @@ Log.trace("we need to add column", column);
 	}
 
 	/**Creates the table after first deleting it if it already exists.
-	@exception SQLException Thrown if there is an error accessing the database.
+	@throws SQLException Thrown if there is an error accessing the database.
 	*/
 	public void create() throws SQLException
 	{
@@ -274,7 +274,7 @@ Log.trace("we need to add column", column);
 
 	/**Creates the table.
 	@param drop Whether the table should first be deleted if it exists.
-	@exception SQLException Thrown if there is an error accessing the database.
+	@throws SQLException Thrown if there is an error accessing the database.
 	*/
 	public void create(final boolean drop) throws SQLException
 	{
@@ -304,10 +304,10 @@ Log.trace("we need to add column", column);
 
 	/**Deletes records by primary key columns.
 	@param primaryKeyValues The value of the primary keys of the record to delete.
-	@exception IllegalArgumentException Thrown if no key values were provided.
-	@exception IllegalArgumentException Thrown if there are more values than
+	@throws IllegalArgumentException Thrown if no key values were provided.
+	@throws IllegalArgumentException Thrown if there are more values than
 		primary key columns.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	@see #getPrimaryKeys()
 	*/
 	public void deleteByPrimaryKey(final Object... primaryKeyValues) throws SQLException
@@ -322,7 +322,7 @@ Log.trace("we need to add column", column);
 	/**Deletes rows from the table for which the given columns contains
 		the specified values.
 	@param columnValues The columns and values to match.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public void delete(final NameValuePair<Column<?>, ?>... columnValues) throws SQLException
 	{
@@ -332,7 +332,7 @@ Log.trace("we need to add column", column);
 	/**Deletes one or more rows from the table that fit the given criteria.
 	@param expression The SQL expression that deletes the records, or
 		<code>null</code> if all records should be deleted.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public void delete(final String expression) throws SQLException
 	{
@@ -360,7 +360,7 @@ Log.trace("we need to add column", column);
 		the specified value.
 	@param columnName The name of the column to test.
 	@param columnValue The column value necessary for a record to be included.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 /*TODO del
 	public void deleteColumn(final String columnName, final String columnValue) throws SQLException
@@ -370,7 +370,7 @@ Log.trace("we need to add column", column);
 */
 
 	/**Drops (deletes) the table if it exists.
-	@exception SQLException Thrown if there is an error accessing the database.
+	@throws SQLException Thrown if there is an error accessing the database.
 	*/
 	public void drop() throws SQLException
 	{
@@ -380,7 +380,7 @@ Log.trace("we need to add column", column);
 	/**Drops (deletes) the table.
 	@param ifExists <code>true</code> if the the table should checked to exist
 		before deleting.
-	@exception SQLException Thrown if there is an error accessing the database.
+	@throws SQLException Thrown if there is an error accessing the database.
 	*/
 	public void drop(final boolean ifExists) throws SQLException
 	{
@@ -407,7 +407,7 @@ Log.trace("we need to add column", column);
 	/**Adds a column to the table.
 	If the column has a default value, all the rows in the table will be set to the given default value.
 	@param column The column to add to the table.
-	@exception SQLException Thrown if there is an error accessing the database.
+	@throws SQLException Thrown if there is an error accessing the database.
 	*/
 	protected void addColumn(final Column<?> column) throws SQLException
 	{
@@ -440,7 +440,7 @@ Log.trace("we need to add column", column);
 	}
 
 	/**@return The number of rows in the table.
-	@exception SQLException Thrown if there is an error accessing the database.
+	@throws SQLException Thrown if there is an error accessing the database.
 	*/
 	public int getRecordCount() throws SQLException
 	{
@@ -490,13 +490,13 @@ Log.trace("we need to add column", column);
 
 	/**Inserts an object into the table.
 	@param object The object to insert.
-	@exception SQLException Thrown if there is an error accessing the table.
+	@throws SQLException Thrown if there is an error accessing the table.
 	*/
 	public abstract void insert(final T object) throws SQLException;
 
 	/**Inserts values into the table.
 	@param values The values to insert into the table.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	protected void insert(final Object... values) throws SQLException
 	{
@@ -524,13 +524,13 @@ Log.trace("we need to add column", column);
 		the given result set.
 	@param resultSet The result set that contains the object information.
 	@return A new object with information from the current row in the result set.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public abstract T retrieve(final ResultSet resultSet) throws SQLException;
 
 	/**Determines if a table exists in the database.
 	@return <code>true</code> if the table exists, else <code>false</code>.
-	@exception SQLException Thrown if there is an error accessing the database.
+	@throws SQLException Thrown if there is an error accessing the database.
 	*/
 	public boolean exists() throws SQLException
 	{
@@ -572,7 +572,7 @@ Log.trace("we need to add column", column);
 		the specified values, using this table as the factory to create objects.
 	@param columnValues The column-value pairs to match.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public SubList<T> select(final NameValuePair<Column<?>, ?>... columnValues) throws SQLException
 	{
@@ -584,7 +584,7 @@ Log.trace("we need to add column", column);
 	@param factory The object factory used to create objects from the result set.
 	@param columnValues The column-value pairs to match.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final NameValuePair<Column<?>, ?>... columnValues) throws SQLException
 	{
@@ -596,7 +596,7 @@ Log.trace("we need to add column", column);
 	@param expression The SQL expression that selects the records, or
 		<code>null</code> if all records should be returned.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public SubList<T> select(final String expression) throws SQLException
 	{
@@ -609,7 +609,7 @@ Log.trace("we need to add column", column);
 	@param expression The SQL expression that selects the records, or
 		<code>null</code> if all records should be returned.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String expression) throws SQLException
 	{
@@ -622,7 +622,7 @@ Log.trace("we need to add column", column);
 		<code>null</code> if all records should be returned.
 	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public SubList<T> select(final String expression, final Column<?>... orderBy) throws SQLException
 	{
@@ -636,7 +636,7 @@ Log.trace("we need to add column", column);
 		<code>null</code> if all records should be returned.
 	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String expression, final Column<?>... orderBy) throws SQLException
 	{
@@ -651,7 +651,7 @@ Log.trace("we need to add column", column);
 	@param count The maximum number of rows to return.
 	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public SubList<T> select(final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
@@ -666,7 +666,7 @@ Log.trace("we need to add column", column);
 	@param count The maximum number of rows to return.
 	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
@@ -682,7 +682,7 @@ Log.trace("we need to add column", column);
 	@param count The maximum number of rows to return.
 	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public SubList<T> select(final String selectExpression, final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
@@ -698,7 +698,7 @@ Log.trace("we need to add column", column);
 	@param count The maximum number of rows to return.
 	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
@@ -716,7 +716,7 @@ Log.trace("we need to add column", column);
 	@param count The maximum number of rows to return.
 	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/	//TODO eventually create objects for select, join, where, etc.
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final String joinExpression, final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException
 	{
@@ -795,7 +795,7 @@ Log.trace("we need to add column", column);
 		<code>null</code> if all records should be returned.
 	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final Join join, final Where where, final Column<?>... orderBy) throws SQLException
 	{
@@ -811,7 +811,7 @@ Log.trace("we need to add column", column);
 		<code>null</code> if all records should be returned.
 	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final Join join, final Where where, final Column<?>... orderBy) throws SQLException
 	{
@@ -820,7 +820,7 @@ Log.trace("we need to add column", column);
 
 	/**Selects all records from the table.
 	@return A list of objects representing all records in the table.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 /**TODO del; no longer needed with varargs
 	public SubList<T> selectAll() throws SQLException
@@ -833,7 +833,7 @@ Log.trace("we need to add column", column);
 	@param startIndex The index of the first row to retrieve.
 	@param count The maximum number of rows to return.
 	@return A list of objects representing all records in the table.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public SubList<T> selectAll(final int startIndex, final int count) throws SQLException
 	{
@@ -843,7 +843,7 @@ Log.trace("we need to add column", column);
 	/**Selects all records from the table.
 	@param orderBy The columns on which to sort, if any.
 	@return A list of objects representing all records in the table.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public SubList<T> selectAll(final Column<?>... orderBy) throws SQLException
 	{
@@ -855,7 +855,7 @@ Log.trace("we need to add column", column);
 	@param startIndex The index of the first row to retrieve.
 	@param count The maximum number of rows to return.
 	@return A list of objects representing all records in the table.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 	public SubList<T> selectAll(final int startIndex, final int count, final Column<?>... orderBy) throws SQLException
 	{
@@ -867,7 +867,7 @@ Log.trace("we need to add column", column);
 	@param columnName The name of the column to test.
 	@param columnValue The column value necessary for a record to be included.
 	@return A list of objects representing matched records.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 /*TODO del if no longer needed
 	public SubList<T> selectColumn(final String columnName, final String columnValue) throws SQLException
@@ -882,7 +882,7 @@ Log.trace("we need to add column", column);
 	@param columnValue The column value necessary for a record to be included.
 	@return The first object that matches the given criteria, or <code>null</code>
 		if no record matches.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 /*TODO del if no longer needed
 	public T selectColumnRecord(final String columnName, final String columnValue) throws SQLException
@@ -896,10 +896,10 @@ Log.trace("we need to add column", column);
 	@param primaryKeyValues The value of the primary keys of the record to delete.
 	@return The object the primary key of which matches the given value, or
 		<code>null</code> if no record matches.
-	@exception IllegalArgumentException Thrown if no key values were provided.
-	@exception IllegalArgumentException Thrown if there are more values than
+	@throws IllegalArgumentException Thrown if no key values were provided.
+	@throws IllegalArgumentException Thrown if there are more values than
 		primary key columns.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	@see #getPrimaryKeys()
 	*/
 	public T selectByPrimaryKey(final Object... primaryKeyValues) throws SQLException
@@ -917,20 +917,20 @@ Log.trace("we need to add column", column);
 	/**Updates a user in the database table.
 	@param object The new information for the record.
 	@param primaryKeyValues The value of the primary keys of the record to delete.
-	@exception IllegalArgumentException Thrown if no key values were provided.
-	@exception IllegalArgumentException Thrown if there are more values than
+	@throws IllegalArgumentException Thrown if no key values were provided.
+	@throws IllegalArgumentException Thrown if there are more values than
 		primary key columns.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/
 //TODO del if not needed	public abstract void update(final T object, final Object... primaryKeyValues) throws SQLException;
 
 	/**Updates records by primary key columns.
 	@param updateColumnValues The array of column/value pair arrays to update.
 	@param primaryKeyValues The value of the primary keys of the record to delete.
-	@exception IllegalArgumentException Thrown if no key values were provided.
-	@exception IllegalArgumentException Thrown if there are more values than
+	@throws IllegalArgumentException Thrown if no key values were provided.
+	@throws IllegalArgumentException Thrown if there are more values than
 		primary key columns.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	@see #getPrimaryKeys()
 	*/
 	public void updateByPrimaryKey(final NameValuePair<Column<?>, ?>[] updateColumnValues, final Object... primaryKeyValues) throws SQLException
@@ -945,7 +945,7 @@ Log.trace("we need to add column", column);
 	/**Inserts values into the table.
 	@param updateColumnValues The array of column/value pair arrays to update.
 	@param whereColumnValues The column names and values to match.
-	@exception SQLException Thrown if there is an error processing the statement.
+	@throws SQLException Thrown if there is an error processing the statement.
 	*/	//TODO we probably need a way to make sure at least one column is passed; otherwise, update would probably update all records
 	protected void update(final NameValuePair<Column<?>, ?>[] updateColumnValues, final NameValuePair<Column<?>, ?>... whereColumnValues) throws SQLException
 	{
@@ -1024,7 +1024,7 @@ Log.trace("we need to add column", column);
 	@param columns The columns to include.
 	@param values The value to match with columns.
 	@return An array containing pairs of columns and values.
-	@exception IllegalArgumentException Thrown if there are more values than
+	@throws IllegalArgumentException Thrown if there are more values than
 		columns.
 	*/
 	public static NameValuePair<Column<?>, ?>[] createColumnValues(final Column<?>[] columns, final Object[] values)
