@@ -20,46 +20,48 @@ import com.globalmentor.model.NameValuePair;
 
 import static com.globalmentor.sql.SQL.*;
 
-/**Encapsulates an SQL expression for WHERE.
-@author Garret Wilson
-*/
-public class Where
-{
+/**
+ * Encapsulates an SQL expression for WHERE.
+ * @author Garret Wilson
+ */
+public class Where {
 
-	/**The conjunction (AND or OR) for matching the columns.*/
+	/** The conjunction (AND or OR) for matching the columns. */
 	private final SQL.Conjunction conjunction;
 
-		/**The conjunction (AND or OR) for matching the columns.*/
-		protected SQL.Conjunction getConjunction() {return conjunction;}
+	/** The conjunction (AND or OR) for matching the columns. */
+	protected SQL.Conjunction getConjunction() {
+		return conjunction;
+	}
 
-	/**The column-value pairs to match.*/
+	/** The column-value pairs to match. */
 	private final NameValuePair<Column<?>, ?>[] columnValues;
 
-		/**@return The column-value pairs to match.*/
-		protected NameValuePair<Column<?>, ?>[] getColumnValues() {return columnValues;}
-
-	/**Creates an expression matching columns and values.
-	Requires all columns and values to match.
-	@param columnValues The column-value pairs to match.
-	*/	
-	public Where(final NameValuePair<Column<?>, ?>... columnValues)
-	{
-		this(SQL.Conjunction.AND, columnValues);	//default requiring all columns and values to match
+	/** @return The column-value pairs to match. */
+	protected NameValuePair<Column<?>, ?>[] getColumnValues() {
+		return columnValues;
 	}
 
-	/**Creates an expression matching columns and values.
-	@param conjunction The conjunction (AND or OR) for requiring matches.
-	@param columnValues The column-value pairs to match.
-	*/	
-	public Where(final SQL.Conjunction conjunction, final NameValuePair<Column<?>, ?>... columnValues)
-	{
-		this.conjunction=conjunction;	//save the conjunction
-		this.columnValues=columnValues;	//save the column-value pairs
+	/**
+	 * Creates an expression matching columns and values. Requires all columns and values to match.
+	 * @param columnValues The column-value pairs to match.
+	 */
+	public Where(final NameValuePair<Column<?>, ?>... columnValues) {
+		this(SQL.Conjunction.AND, columnValues); //default requiring all columns and values to match
 	}
 
-	/**Creates an SQL string version of this expression.*/
-	public String toString()
-	{
-		return createExpression(getConjunction(), Table.createNamesValues(getColumnValues()));	//create the expression using our conjunction with the columns and values
+	/**
+	 * Creates an expression matching columns and values.
+	 * @param conjunction The conjunction (AND or OR) for requiring matches.
+	 * @param columnValues The column-value pairs to match.
+	 */
+	public Where(final SQL.Conjunction conjunction, final NameValuePair<Column<?>, ?>... columnValues) {
+		this.conjunction = conjunction; //save the conjunction
+		this.columnValues = columnValues; //save the column-value pairs
+	}
+
+	/** Creates an SQL string version of this expression. */
+	public String toString() {
+		return createExpression(getConjunction(), Table.createNamesValues(getColumnValues())); //create the expression using our conjunction with the columns and values
 	}
 }
