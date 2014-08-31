@@ -33,73 +33,73 @@ public class SQL {
 	};
 
 	/** The character that quotes strings in SQL values. */
-	public final static char SINGLE_QUOTE = '\'';
+	public static final char SINGLE_QUOTE = '\'';
 	/** The escaped form of a single quote. */
-	public final static String ESCAPED_SINGLE_QUOTE = "''";
+	public static final String ESCAPED_SINGLE_QUOTE = "''";
 	/** The SQL equals character. */
-	public final static char EQUALS = '=';
+	public static final char EQUALS = '=';
 	/** The SQL list separator character. */
-	public final static char LIST_SEPARATOR = ',';
+	public static final char LIST_SEPARATOR = ',';
 	/** The SQL table.column separator character. */
-	public final static char TABLE_COLUMN_SEPARATOR = '.';
+	public static final char TABLE_COLUMN_SEPARATOR = '.';
 
 	/** The SQL wildcard ('*') character. */
-	public final static char WILDCARD_CHAR = '*';
+	public static final char WILDCARD_CHAR = '*';
 
 	/** The SQL ADD command. */
-	public final static String ADD = "ADD";
+	public static final String ADD = "ADD";
 	/** The SQL ALTER command. */
-	public final static String ALTER = "ALTER";
+	public static final String ALTER = "ALTER";
 	/** The SQL AND keyword. */
-	//TODO del when works	public final static String AND="AND";
+	//TODO del when works	public static final String AND="AND";
 	/** The SQL BY keyword. */
-	public final static String BY = "BY";
+	public static final String BY = "BY";
 	/** The SQL CREATE command. */
-	public final static String CREATE = "CREATE";
+	public static final String CREATE = "CREATE";
 	/** The SQL DEFAULT keyword. */
-	public final static String DEFAULT = "DEFAULT";
+	public static final String DEFAULT = "DEFAULT";
 	/** The SQL DELETE command. */
-	public final static String DELETE = "DELETE";
+	public static final String DELETE = "DELETE";
 	/** The SQL DROP command. */
-	public final static String DROP = "DROP";
+	public static final String DROP = "DROP";
 	/** The SQL EXISTS keyword. */
-	public final static String EXISTS = "EXISTS";
+	public static final String EXISTS = "EXISTS";
 	/** The SQL FROM keyword. */
-	public final static String FROM = "FROM";
+	public static final String FROM = "FROM";
 	/** The SQL IF keyword. */
-	public final static String IF = "IF";
+	public static final String IF = "IF";
 	/** The SQL KEY keyword. */
-	public final static String KEY = "KEY";
+	public static final String KEY = "KEY";
 	/** The SQL INSERT command. */
-	public final static String INSERT = "INSERT";
+	public static final String INSERT = "INSERT";
 	/** The SQL INTO keyword. */
-	public final static String INTO = "INTO";
+	public static final String INTO = "INTO";
 	/** The SQL JOIN command. */
-	public final static String JOIN = "JOIN";
+	public static final String JOIN = "JOIN";
 	/** The SQL NULL keyword. */
-	public final static String NULL = "NULL";
+	public static final String NULL = "NULL";
 	/** The SQL ON keyword. */
-	public final static String ON = "ON";
+	public static final String ON = "ON";
 	/** The SQL ORDER keyword. */
-	public final static String ORDER = "ORDER";
+	public static final String ORDER = "ORDER";
 	/** The SQL ORDER BY phrase. */
-	public final static String ORDER_BY = ORDER + ' ' + BY;
+	public static final String ORDER_BY = ORDER + ' ' + BY;
 	/** The SQL PRIMARY keyword. */
-	public final static String PRIMARY = "PRIMARY";
+	public static final String PRIMARY = "PRIMARY";
 	/** The SQL PRIMARY KEY phrase. */
-	public final static String PRIMARY_KEY = PRIMARY + ' ' + KEY;
+	public static final String PRIMARY_KEY = PRIMARY + ' ' + KEY;
 	/** The SQL SELECT command. */
-	public final static String SELECT = "SELECT";
+	public static final String SELECT = "SELECT";
 	/** The SQL SET command. */
-	public final static String SET = "SET";
+	public static final String SET = "SET";
 	/** The SQL TABLE keyword. */
-	public final static String TABLE = "TABLE";
+	public static final String TABLE = "TABLE";
 	/** The SQL UPDATE command. */
-	public final static String UPDATE = "UPDATE";
+	public static final String UPDATE = "UPDATE";
 	/** The SQL VALUES keyword. */
-	public final static String VALUES = "VALUES";
+	public static final String VALUES = "VALUES";
 	/** The SQL WHERE keyword. */
-	public final static String WHERE = "WHERE";
+	public static final String WHERE = "WHERE";
 
 	/**
 	 * Creates a table using SQL commands.

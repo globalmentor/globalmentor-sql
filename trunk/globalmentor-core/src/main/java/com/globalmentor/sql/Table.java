@@ -48,7 +48,7 @@ import com.globalmentor.log.Log;
 public abstract class Table<T> implements ResultSetObjectFactory<T> {
 
 	/** The SQL wildcard ('*') character in string format. */
-	protected final static String WILDCARD_STRING = String.valueOf(WILDCARD_CHAR);
+	protected static final String WILDCARD_STRING = String.valueOf(WILDCARD_CHAR);
 
 	/** The data source that allows access to the database. */
 	private final DataSource dataSource;

@@ -23,7 +23,7 @@ package com.globalmentor.sql;
 public class JDBC {
 
 	/** The property for the JDBC username. */
-	public final static String USER_PROPERTY = "user";
+	public static final String USER_PROPERTY = "user";
 	/** The property for the JDBC password. */
-	public final static String PASSWORD_PROPERTY = "password";
+	public static final String PASSWORD_PROPERTY = "password";
 }
