@@ -108,7 +108,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	 * Constructor.
 	 * @param dataSource The connection factory.
 	 * @param name The name of the table.
-	 * @param definition The definition of the table.
+	 * @param columns The columns of the table.
 	 */
 	public Table(final DataSource dataSource, final String name, final Column<?>... columns) {
 		this.dataSource = dataSource; //set the data source
@@ -126,7 +126,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 
 	/**
 	 * @return A text definition suitable for an SQL CREATE TABLE <var>table</var> <var>definition</var> statement.
-	 * @see #getDefinition()
+	 * @see #getSQLDefinition()
 	 */
 	protected String getSQLDefinition() {
 		final StringBuilder stringBuilder = new StringBuilder(); //we'll accumulate the SQL definition here
@@ -228,6 +228,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	/**
 	 * Retrieves metadata describing the underlying table columns.
 	 * @throws SQLException Thrown if there is an error accessing the database.
+	 * @return The metadata describing the underlying table columns.
 	 */
 	public List<ColumnMetaData> getColumnMetadata() throws SQLException {
 		final Connection connection = getDataSource().getConnection(); //get a connection to the database
@@ -512,6 +513,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 
 	/**
 	 * Selects all the records from the table for which the given columns contains the specified values.
+	 * @param <F> The type of the objects of the sublist.
 	 * @param factory The object factory used to create objects from the result set.
 	 * @param columnValues The column-value pairs to match.
 	 * @return A list of objects representing matched records.
@@ -533,6 +535,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 
 	/**
 	 * Selects all the records from the table using the given criteria with the default ordering.
+	 * @param <F> The type of the objects of the sublist.
 	 * @param factory The object factory used to create objects from the result set.
 	 * @param expression The SQL expression that selects the records, or <code>null</code> if all records should be returned.
 	 * @return A list of objects representing matched records.
@@ -555,6 +558,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 
 	/**
 	 * Selects all the records from the table using the given criteria, sorting on the given column.
+	 * @param <F> The type of the objects of the sublist.
 	 * @param factory The object factory used to create objects from the result set.
 	 * @param expression The SQL expression that selects the records, or <code>null</code> if all records should be returned.
 	 * @param orderBy The columns on which to sort, if any.
@@ -580,6 +584,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 
 	/**
 	 * Selects all columns of records from the table using the given criteria.
+	 * @param <F> The type of the objects of the sublist.
 	 * @param factory The object factory used to create objects from the result set.
 	 * @param whereExpression The SQL expression that selects the records, or <code>null</code> if all records should be returned.
 	 * @param startIndex The index of the first row to retrieve.
@@ -610,6 +615,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 
 	/**
 	 * Selects records from the table using the given criteria.
+	 * @param <F> The type of the objects of the sublist.
 	 * @param factory The object factory used to create objects from the result set.
 	 * @param selectExpression The SQL expression that selects the columns.
 	 * @param whereExpression The SQL expression that selects the records, or <code>null</code> if all records should be returned.
@@ -626,6 +632,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 
 	/**
 	 * Selects records from the table using the given criteria.
+	 * @param <F> The type of the objects of the sublist.
 	 * @param factory The object factory used to create objects from the result set.
 	 * @param selectExpression The SQL expression that selects the columns.
 	 * @param joinExpression The complete SQL expression for joining tables, or <code>null</code> if no tables are being joined.
@@ -694,6 +701,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 
 	/**
 	 * Selects all columns from records from the table using the given criteria.
+	 * @param <F> The type of the objects of the sublist.
 	 * @param factory The object factory used to create objects from the result set.
 	 * @param join The SQL join representation, or <code>null</code> if no tables are being joined.
 	 * @param where The SQL records selection, or <code>null</code> if all records should be returned.
@@ -707,6 +715,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 
 	/**
 	 * Selects records from the table using the given criteria.
+	 * @param <F> The type of the objects of the sublist.
 	 * @param factory The object factory used to create objects from the result set.
 	 * @param selectExpression The SQL expression that selects the columns.
 	 * @param join The SQL join representation, or <code>null</code> if no tables are being joined.
@@ -954,6 +963,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	/**
 	 * Creates a string representing a list of columns in SQL.
 	 * @param columns The columns to be placed in a list.
+	 * @return The string representing the columns in SQL.
 	 */
 	public static String createList(final Column<?>... columns) {
 		final String[] columnNames = new String[columns.length]; //create an array of items

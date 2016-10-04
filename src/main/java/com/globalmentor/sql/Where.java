@@ -29,7 +29,7 @@ public class Where {
 	/** The conjunction (AND or OR) for matching the columns. */
 	private final SQL.Conjunction conjunction;
 
-	/** The conjunction (AND or OR) for matching the columns. */
+	/** @return The conjunction (AND or OR) for matching the columns. */
 	protected SQL.Conjunction getConjunction() {
 		return conjunction;
 	}
