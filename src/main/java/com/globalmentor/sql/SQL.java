@@ -306,6 +306,7 @@ public class SQL {
 	/**
 	 * Creates a string representing an SQL list.
 	 * @param items The items contained in the list, such as column names.
+	 * @return The string representing the SQL list.
 	 */
 	public static String createList(final String... items) {
 		final StringBuilder list = new StringBuilder();
