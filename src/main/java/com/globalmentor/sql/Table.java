@@ -413,10 +413,10 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 				final Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 				try {
 					//create a statement for selecting all the records: "SELECT * FROM table"
-					final StringBuffer statementStringBuffer = new StringBuffer(); //create a string buffer in which to construct the statement
-					statementStringBuffer.append(SELECT).append(' ').append(WILDCARD_CHAR); //append "SELECT *"
-					statementStringBuffer.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
-					final ResultSet resultSet = statement.executeQuery(statementStringBuffer.toString()); //select all the records
+					final StringBuilder statementStringBuilder = new StringBuilder(); //create a string buffer in which to construct the statement
+					statementStringBuilder.append(SELECT).append(' ').append(WILDCARD_CHAR); //append "SELECT *"
+					statementStringBuilder.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
+					final ResultSet resultSet = statement.executeQuery(statementStringBuilder.toString()); //select all the records
 					try {
 						resultSet.last(); //move to after the last row TODO make this a comvenience method that knows how to iterate the table of ResultSet.last() isn't supported
 						final int recordCount = resultSet.getRow(); //get the row number, which will be the number of rows in the table
@@ -653,24 +653,24 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 			//TODO del			final Statement statement=connection.createStatement(); //create a statement
 			try {
 				//create a statement for selecting the records: "SELECT * FROM table WHERE expression"
-				final StringBuffer statementStringBuffer = new StringBuffer(); //create a string buffer in which to construct the statement
-				statementStringBuffer.append(SELECT).append(' ').append(selectExpression); //append "SELECT <var>selectExpression</var>"
-				statementStringBuffer.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
+				final StringBuilder statementStringBuilder = new StringBuilder(); //create a string buffer in which to construct the statement
+				statementStringBuilder.append(SELECT).append(' ').append(selectExpression); //append "SELECT <var>selectExpression</var>"
+				statementStringBuilder.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
 				if(joinExpression != null) { //if we are joining
-					statementStringBuffer.append(' ').append(joinExpression); //append "<var>joinStatement</var>"
+					statementStringBuilder.append(' ').append(joinExpression); //append "<var>joinStatement</var>"
 				}
 				if(whereExpression != null && whereExpression.length() > 0) { //if a valid expression was given
-					statementStringBuffer.append(' ').append(WHERE).append(' ').append(whereExpression); //append " WHERE <var>whereExpression</var>"
+					statementStringBuilder.append(' ').append(WHERE).append(' ').append(whereExpression); //append " WHERE <var>whereExpression</var>"
 				}
 				if(orderBy.length == 0) { //if no default ordering was given
 					orderBy = getDefaultOrderBy(); //use the default ordering
 				}
 				if(orderBy.length > 0) { //if we were given an ordering, or we have a default ordering
-					statementStringBuffer.append(' ').append(ORDER_BY).append(' ').append(createList(orderBy)); //append " ORDER BY orderBy"
+					statementStringBuilder.append(' ').append(ORDER_BY).append(' ').append(createList(orderBy)); //append " ORDER BY orderBy"
 				}
 				//TODO del Debug.setDebug(true);
-				//TODO del Log.trace("ready to execute SQL statement: ", statementStringBuffer);	//TODO del
-				final ResultSet resultSet = statement.executeQuery(statementStringBuffer.toString()); //select the records
+				//TODO del Log.trace("ready to execute SQL statement: ", statementStringBuilder);	//TODO del
+				final ResultSet resultSet = statement.executeQuery(statementStringBuilder.toString()); //select the records
 				try {
 					final ArraySubList<F> list = new ArraySubList<F>(); //create a list of results
 					list.setStartIndex(startIndex); //show for what index we're returning results
