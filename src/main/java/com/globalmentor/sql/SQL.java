@@ -141,11 +141,11 @@ public class SQL {
 	 * @throws SQLException Thrown if there is an error processing the statement.
 	 */
 	public static void dropTable(final Statement statement, final String name, final boolean ifExists) throws SQLException {
-		final StringBuffer statementStringBuffer = new StringBuffer(); //create a string buffer in which to construct the statement
-		statementStringBuffer.append(DROP).append(' ').append(TABLE).append(' ').append(name); //append "DROP TABLE name"
+		final StringBuilder statementStringBuilder = new StringBuilder(); //create a string buffer in which to construct the statement
+		statementStringBuilder.append(DROP).append(' ').append(TABLE).append(' ').append(name); //append "DROP TABLE name"
 		if(ifExists) //if we should add the existence check
-			statementStringBuffer.append(' ').append(IF).append(' ').append(EXISTS); //append " IF EXISTS"
-		statement.executeUpdate(statementStringBuffer.toString()); //execute the SQL drop statement
+			statementStringBuilder.append(' ').append(IF).append(' ').append(EXISTS); //append " IF EXISTS"
+		statement.executeUpdate(statementStringBuilder.toString()); //execute the SQL drop statement
 	}
 
 	/**
@@ -180,21 +180,21 @@ public class SQL {
 	 * @throws SQLException Thrown if there is an error processing the statement.
 	 */
 	public static void insertValues(final Statement statement, final String name, final Object... values) throws SQLException { //TODO fix to work with integer values
-		final StringBuffer valueStringBuffer = new StringBuffer(); //we'll store the values in this string
+		final StringBuilder valueStringBuilder = new StringBuilder(); //we'll store the values in this string
 		for(int i = 0; i < values.length; ++i) { //look at each of the values
 			final Object value = values[i]; //get this value
 			if(value != null) { //if we have a valid value	TODO refactor with a new createSQLValue() method that takes care of all this
-				valueStringBuffer.append(SINGLE_QUOTE);
-				valueStringBuffer.append(createSQLValue(value.toString())); //add the string representation of this object to our value string
-				valueStringBuffer.append(SINGLE_QUOTE);
+				valueStringBuilder.append(SINGLE_QUOTE);
+				valueStringBuilder.append(createSQLValue(value.toString())); //add the string representation of this object to our value string
+				valueStringBuilder.append(SINGLE_QUOTE);
 			} else { //if we don't have a valid value
-				valueStringBuffer.append(NULL); //add an SQL NULL value
+				valueStringBuilder.append(NULL); //add an SQL NULL value
 			}
 			if(i < values.length - 1) { //if we have more values to go
-				valueStringBuffer.append(LIST_SEPARATOR).append(' '); //separate the values
+				valueStringBuilder.append(LIST_SEPARATOR).append(' '); //separate the values
 			}
 		}
-		insertValues(statement, name, valueStringBuffer.toString()); //perform the insert with the value stream we constructed
+		insertValues(statement, name, valueStringBuilder.toString()); //perform the insert with the value stream we constructed
 	}
 
 	/**
@@ -217,12 +217,12 @@ public class SQL {
 	 * @throws SQLException Thrown if there is an error processing the statement.
 	 */
 	public static void updateTable(final Statement statement, final String name, final String valueString, final String predicate) throws SQLException {
-		final StringBuffer statementStringBuffer = new StringBuffer(); //we'll store the statement in this string
-		statementStringBuffer.append(UPDATE).append(' ').append(name); //"UPDATE name"
-		statementStringBuffer.append(' ').append(SET).append(' ').append(valueString); //" SET valueString"
+		final StringBuilder statementStringBuilder = new StringBuilder(); //we'll store the statement in this string
+		statementStringBuilder.append(UPDATE).append(' ').append(name); //"UPDATE name"
+		statementStringBuilder.append(' ').append(SET).append(' ').append(valueString); //" SET valueString"
 		if(predicate != null) //if there is a predicate
-			statementStringBuffer.append(' ').append(WHERE).append(' ').append(predicate); //add the predicate, in the form " WHERE predicate"
-		statement.executeUpdate(statementStringBuffer.toString()); //execute the SQL update statemen
+			statementStringBuilder.append(' ').append(WHERE).append(' ').append(predicate); //add the predicate, in the form " WHERE predicate"
+		statement.executeUpdate(statementStringBuilder.toString()); //execute the SQL update statemen
 	}
 
 	/**
@@ -246,23 +246,23 @@ public class SQL {
 	 */
 	public static void updateTable(final Statement statement, final String name, final NameValuePair<String, String>[] namesValues, final String predicate)
 			throws SQLException {
-		final StringBuffer valueStringBuffer = new StringBuffer(); //we'll construct the value string from the names and values
+		final StringBuilder valueStringBuilder = new StringBuilder(); //we'll construct the value string from the names and values
 		for(int i = 0; i < namesValues.length; ++i) { //look at each of the name/value pair arrays
-			valueStringBuffer.append(namesValues[i].getName()); //append the name
-			valueStringBuffer.append(EQUALS); //append '='
+			valueStringBuilder.append(namesValues[i].getName()); //append the name
+			valueStringBuilder.append(EQUALS); //append '='
 			final Object value = namesValues[i].getValue(); //TODO refactor
 			if(value != null) { //if we have a valid value	TODO refactor with a new createSQLValue() method that takes care of all this
-				valueStringBuffer.append(SINGLE_QUOTE);
-				valueStringBuffer.append(createSQLValue(value.toString())); //append the value
-				valueStringBuffer.append(SINGLE_QUOTE);
+				valueStringBuilder.append(SINGLE_QUOTE);
+				valueStringBuilder.append(createSQLValue(value.toString())); //append the value
+				valueStringBuilder.append(SINGLE_QUOTE);
 			} else { //if we don't have a valid value
-				valueStringBuffer.append(NULL); //add an SQL NULL value
+				valueStringBuilder.append(NULL); //add an SQL NULL value
 			}
 			if(i < namesValues.length - 1) { //if we have more names and values to go
-				valueStringBuffer.append(LIST_SEPARATOR).append(' '); //separate the values
+				valueStringBuilder.append(LIST_SEPARATOR).append(' '); //separate the values
 			}
 		}
-		updateTable(statement, name, valueStringBuffer.toString(), predicate); //update the table with our constructed value string
+		updateTable(statement, name, valueStringBuilder.toString(), predicate); //update the table with our constructed value string
 	}
 
 	/*TODO fix Creates an expression in the form
