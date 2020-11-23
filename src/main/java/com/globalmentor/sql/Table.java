@@ -231,14 +231,12 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	 * @return The metadata describing the underlying table columns.
 	 */
 	public List<ColumnMetaData> getColumnMetadata() throws SQLException {
-		final Connection connection = getDataSource().getConnection(); //get a connection to the database
-		try {
+		try (final Connection connection = getDataSource().getConnection()) { //get a connection to the database
 			final DatabaseMetaData metadata = connection.getMetaData(); //get database metadata
 			//use the uppercase form of the table name TODO check to see if this is implementation-specific or part of the JDBC specification
 			//SEE http://www.javaworld.com/javaworld/javatips/jw-javatip82.html
 			//SEE http://hsqldb.sourceforge.net/doc/src/org/hsqldb/jdbc/jdbcDatabaseMetaData.html#getColumns(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String)
-			final ResultSet resultSet = metadata.getColumns(null, null, getName().toUpperCase(), "%"); //get all columns for this table TODO use a constant for the JDBC wildcard
-			try {
+			try (final ResultSet resultSet = metadata.getColumns(null, null, getName().toUpperCase(), "%")) { //get all columns for this table TODO use a constant for the JDBC wildcard
 				final List<ColumnMetaData> columnMetaDataList = new ArrayList<ColumnMetaData>(); //create a new list to hold the column metadata
 				while(resultSet.next()) { //while ther are more columns
 					final String name = resultSet.getString(ColumnMetaData.Columns.COLUMN_NAME.toString()); //get the column name
@@ -247,11 +245,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 					columnMetaDataList.add(columnMetaData); //add the metadata to our list
 				}
 				return columnMetaDataList; //return the list of column metadata
-			} finally {
-				resultSet.close(); //always close the result set 
 			}
-		} finally {
-			connection.close(); //always close the connection
 		}
 	}
 
@@ -269,20 +263,14 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	 * @throws SQLException Thrown if there is an error accessing the database.
 	 */
 	public void create(final boolean drop) throws SQLException {
-		final Connection connection = getDataSource().getConnection(); //get a connection to the database
-		try {
-			final Statement statement = connection.createStatement(); //create a statement
-			try {
+		try (final Connection connection = getDataSource().getConnection()) { //get a connection to the database
+			try (final Statement statement = connection.createStatement()) { //create a statement
 				if(drop) { //if we should first drop the table
 					drop(true); //remove the table if it exists
 				}
 				createTable(statement, getName(), getSQLDefinition()); //create the table
 				invalidateCachedRecordCount(); //any cached record count is no longer valid
-			} finally {
-				statement.close(); //always close the statement
 			}
-		} finally {
-			connection.close(); //always close the connection
 		}
 	}
 
@@ -316,17 +304,11 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	 * @throws SQLException Thrown if there is an error processing the statement.
 	 */
 	public void delete(final String expression) throws SQLException {
-		final Connection connection = getDataSource().getConnection(); //get a connection to the database
-		try {
-			final Statement statement = connection.createStatement(); //create a statement
-			try {
+		try (final Connection connection = getDataSource().getConnection()) { //get a connection to the database
+			try (final Statement statement = connection.createStatement()) { //create a statement
 				SQL.delete(statement, getName(), expression); //delete the records
 				invalidateCachedRecordCount(); //any cached record count is no longer valid
-			} finally {
-				statement.close(); //always close the statement
 			}
-		} finally {
-			connection.close(); //always close the connection
 		}
 	}
 
@@ -357,17 +339,11 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	 * @throws SQLException Thrown if there is an error accessing the database.
 	 */
 	public void drop(final boolean ifExists) throws SQLException {
-		final Connection connection = getDataSource().getConnection(); //get a connection to the database
-		try {
-			final Statement statement = connection.createStatement(); //create a statement
-			try {
+		try (final Connection connection = getDataSource().getConnection()) { //get a connection to the database
+			try (final Statement statement = connection.createStatement()) { //create a statement
 				dropTable(statement, getName(), ifExists); //remove the table if it exists
 				invalidateCachedRecordCount(); //any cached record count is no longer valid
-			} finally {
-				statement.close(); //always close the statement
 			}
-		} finally {
-			connection.close(); //always close the connection
 		}
 	}
 
@@ -377,10 +353,8 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	 * @throws SQLException Thrown if there is an error accessing the database.
 	 */
 	protected void addColumn(final Column<?> column) throws SQLException {
-		final Connection connection = getDataSource().getConnection(); //get a connection to the database
-		try {
-			final Statement statement = connection.createStatement(); //create a statement
-			try {
+		try (final Connection connection = getDataSource().getConnection()) { //get a connection to the database
+			try (final Statement statement = connection.createStatement()) { //create a statement
 				//TODO create a transaction here
 				alterTableAddColumn(statement, getName(), column.getName(), getColumnSQLDefinition(column)); //add the column to the table
 				/*TODO del if not needed; passing a default value seems to automatically update the table when it is added 
@@ -390,11 +364,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 									updateTable(statement, getName(), (NameValuePair<String, String>[])new NameValuePair[]{new NameValuePair<String, String>(column.getName(), defaultValue.toString())});	//update the new column with the default value
 								}
 				*/
-			} finally {
-				statement.close(); //always close the statement
 			}
-		} finally {
-			connection.close(); //always close the connection
 		}
 	}
 
@@ -407,30 +377,20 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 		if(getCachedRecordCount() >= 0 && getLastCacheTime() > System.currentTimeMillis() - getCachedRecordCountLifetime()) {
 			return getCachedRecordCount(); //return the cached record count
 		} else { //if our cached record count is expired or invalid
-			final Connection connection = getDataSource().getConnection(); //get a connection to the database
-			try {
+			try (final Connection connection = getDataSource().getConnection()) { //get a connection to the database
 				//create a statement that can quickly scroll to the end
-				final Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-				try {
+				try (final Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
 					//create a statement for selecting all the records: "SELECT * FROM table"
 					final StringBuilder statementStringBuilder = new StringBuilder(); //create a string buffer in which to construct the statement
 					statementStringBuilder.append(SELECT).append(' ').append(WILDCARD_CHAR); //append "SELECT *"
 					statementStringBuilder.append(' ').append(FROM).append(' ').append(getName()); //append " FROM name"
-					final ResultSet resultSet = statement.executeQuery(statementStringBuilder.toString()); //select all the records
-					try {
+					try (final ResultSet resultSet = statement.executeQuery(statementStringBuilder.toString())) { //select all the records
 						resultSet.last(); //move to after the last row TODO make this a comvenience method that knows how to iterate the table of ResultSet.last() isn't supported
 						final int recordCount = resultSet.getRow(); //get the row number, which will be the number of rows in the table
 						setCachedRecordCount(recordCount); //update the cached record count
 						return recordCount; //return the record count
-
-					} finally {
-						resultSet.close(); //always close the result set
 					}
-				} finally {
-					statement.close(); //always close the statement
 				}
-			} finally {
-				connection.close(); //always close the connection
 			}
 		}
 	}
@@ -448,17 +408,11 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	 * @throws SQLException Thrown if there is an error processing the statement.
 	 */
 	protected void insert(final Object... values) throws SQLException {
-		final Connection connection = getDataSource().getConnection(); //get a connection to the database
-		try {
-			final Statement statement = connection.createStatement(); //create a statement
-			try {
+		try (final Connection connection = getDataSource().getConnection()) { //get a connection to the database
+			try (final Statement statement = connection.createStatement()) { //create a statement
 				insertValues(statement, getName(), values); //insert the values into the table
 				invalidateCachedRecordCount(); //any cached record count is no longer valid
-			} finally {
-				statement.close(); //always close the statement
 			}
-		} finally {
-			connection.close(); //always close the connection
 		}
 	}
 
@@ -482,19 +436,13 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 		//TODO find a better way to check for table existence, such as looking at database metadata, if there is a standard JDBC way to do that
 		try {
 			//TODO del			select("TOP 1 *", null, 0, Integer.MAX_VALUE);  //select the first record from the database TODO use constants, and create a convenience routine for selectExpression methods
-			final Connection connection = getDataSource().getConnection(); //get a connection to the database
-			try {
-				final Statement statement = connection.createStatement(); //create a statement
-				try {
+			try (final Connection connection = getDataSource().getConnection()) { //get a connection to the database
+				try (final Statement statement = connection.createStatement()) { //create a statement
 					//execute a query directly; using the table's convenience methods may assume a structure that has not yet been synchronized
-					final ResultSet resultSet = statement.executeQuery(SELECT + ' ' + "TOP 1 *" + ' ' + FROM + ' ' + getName()); //select the first record from the database TODO use constants, and create a convenience routine for selectExpression methods
-					resultSet.close(); //always close the result set
-					return true; //if we can select records from the table, the table exists
-				} finally {
-					statement.close(); //always close the statement
+					try (final ResultSet resultSet = statement.executeQuery(SELECT + ' ' + "TOP 1 *" + ' ' + FROM + ' ' + getName())) { //select the first record from the database TODO use constants, and create a convenience routine for selectExpression methods
+						return true; //if we can select records from the table, the table exists
+					}
 				}
-			} finally {
-				connection.close(); //always close the connection
 			}
 		} catch(SQLException sqlException) { //if there is any error
 			return false; //assume the table doesn't exist
@@ -646,12 +594,10 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	//TODO eventually create objects for select, join, where, etc.
 	public <F> SubList<F> select(final ResultSetObjectFactory<F> factory, final String selectExpression, final String joinExpression,
 			final String whereExpression, final int startIndex, final int count, Column<?>... orderBy) throws SQLException {
-		final Connection connection = getDataSource().getConnection(); //get a connection to the database
-		try {
+		try (final Connection connection = getDataSource().getConnection()) { //get a connection to the database
 			//create a statement that can quickly scroll to the end
-			final Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+			try (final Statement statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
 			//TODO del			final Statement statement=connection.createStatement(); //create a statement
-			try {
 				//create a statement for selecting the records: "SELECT * FROM table WHERE expression"
 				final StringBuilder statementStringBuilder = new StringBuilder(); //create a string buffer in which to construct the statement
 				statementStringBuilder.append(SELECT).append(' ').append(selectExpression); //append "SELECT <var>selectExpression</var>"
@@ -670,8 +616,7 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 				}
 				//TODO del Debug.setDebug(true);
 				//TODO del Log.trace("ready to execute SQL statement: ", statementStringBuilder);	//TODO del
-				final ResultSet resultSet = statement.executeQuery(statementStringBuilder.toString()); //select the records
-				try {
+				try (final ResultSet resultSet = statement.executeQuery(statementStringBuilder.toString())) { //select the records
 					final ArraySubList<F> list = new ArraySubList<F>(); //create a list of results
 					list.setStartIndex(startIndex); //show for what index we're returning results
 					final int startRow = startIndex + 1; //we'll start at the requested row
@@ -688,14 +633,8 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 					final int superListSize = resultSet.getRow(); //get the row number, which will be the number of rows in the table
 					list.setSuperListSize(superListSize); //show how many rows we found
 					return list; //return the list of objects representing the records we found
-				} finally {
-					resultSet.close(); //always close the result set
 				}
-			} finally {
-				statement.close(); //always close the statement
 			}
-		} finally {
-			connection.close(); //always close the connection
 		}
 	}
 
@@ -854,17 +793,11 @@ public abstract class Table<T> implements ResultSetObjectFactory<T> {
 	 */
 	//TODO we probably need a way to make sure at least one column is passed; otherwise, update would probably update all records
 	protected void update(final NameValuePair<Column<?>, ?>[] updateColumnValues, final NameValuePair<Column<?>, ?>... whereColumnValues) throws SQLException {
-		final Connection connection = getDataSource().getConnection(); //get a connection to the database
-		try {
-			final Statement statement = connection.createStatement(); //create a statement
-			try {
+		try (final Connection connection = getDataSource().getConnection()) { //get a connection to the database
+			try (final Statement statement = connection.createStatement()) { //create a statement
 				//update the values for the row with the primary key value
 				updateTable(statement, getName(), createNamesValues(updateColumnValues), createExpression(Conjunction.AND, createNamesValues(whereColumnValues)));
-			} finally {
-				statement.close(); //always close the statement
 			}
-		} finally {
-			connection.close(); //always close the connection
 		}
 	}
 
